@@ -1,0 +1,56 @@
+name: 아침 브리핑
+
+# 미국 장 마감(뉴욕 16:00) 이후에 실행 — 22:00 UTC = 서머타임 18:00 ET / 겨울 17:00 ET
+# (한국시간으로는 오전 7시)
+on:
+  schedule:
+    - cron: "0 22 * * 1-5"
+  workflow_dispatch:        # 수동 실행 버튼
+
+permissions:
+  contents: write           # state.json / feed.js 를 저장소에 다시 커밋하기 위함
+
+concurrency:
+  group: news-alert-daily
+  cancel-in-progress: false
+
+jobs:
+  briefing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 패키지 설치
+        run: pip install requests
+
+      - name: 뉴스 분석 + 아침 브리핑 전송
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python news_alert.py --daily
+
+      - name: 상태 저장
+        continue-on-error: true   # 저장이 실패해도 알림은 이미 나갔으므로 실행 자체를 실패로 보지 않음
+        run: |
+          git config user.name "news-alert-bot"
+          git config user.email "actions@github.com"
+          git add -A state.json feed.json feed.js team.json debates.json 2>/dev/null || true
+          if git diff --staged --quiet; then
+            echo "바뀐 내용 없음 — 저장 건너뜀"
+            exit 0
+          fi
+          git commit -q -m "chore: 아침 브리핑 $(date -u +%Y-%m-%d)"
+          for i in 1 2 3 4 5; do
+            if git pull --rebase --autostash -q origin "$GITHUB_REF_NAME" && git push -q; then
+              echo "상태 저장 완료 (시도 $i회)"
+              exit 0
+            fi
+            echo "다른 실행과 겹쳐 재시도합니다 ($i/5)"
+            sleep $((RANDOM % 8 + 3))
+          done
+          echo "::warning::상태 저장에 실패했습니다. 알림은 정상 발송되었습니다."

@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>토스뉴스알리미 상황실</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@latest/dist/galmuri.css">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --bg:#1a1423; --wood:#6b4a2f; --wood-d:#54381f; --panel:#241b2e;
+    --ink:#f2e9dc; --dim:#a898b8; --green:#5dd97c; --red:#ff6b6b; --gray:#9aa5b1;
+    --gold:#ffd166; --line:#3a2d4a;
+  }
+  body {
+    background:var(--bg); color:var(--ink);
+    font-family:"Galmuri11","Galmuri9","맑은 고딕",monospace;
+    image-rendering:pixelated; min-height:100vh;
+  }
+  /* CRT 스캔라인 */
+  body::after {
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:99;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,.13) 0 1px, transparent 1px 3px);
+  }
+  .wrap { max-width:760px; margin:0 auto; padding:0 10px 60px; }
+
+  /* ── 간판 ── */
+  header { text-align:center; padding:22px 0 12px; }
+  .sign {
+    display:inline-block; background:var(--wood); border:4px solid var(--wood-d);
+    box-shadow:0 4px 0 var(--wood-d), 0 8px 0 rgba(0,0,0,.4);
+    padding:10px 22px; font-size:20px; letter-spacing:2px; color:var(--gold);
+    text-shadow:2px 2px 0 #000;
+  }
+  .updated { margin-top:10px; font-size:12px; color:var(--dim); }
+  .stale { color:#ffb74d; }
+  .rbtn {
+    font-family:inherit; font-size:12px; cursor:pointer; color:var(--ink);
+    background:var(--panel); border:3px solid var(--line); padding:6px 14px;
+    box-shadow:0 3px 0 var(--line); margin-top:10px;
+  }
+  .rbtn:active { transform:translateY(3px); box-shadow:none; }
+
+  /* ── 시세 전광판 ── */
+  .tape {
+    overflow:hidden; white-space:nowrap; background:#000; border:3px solid var(--line);
+    box-shadow:inset 0 0 12px rgba(93,217,124,.15); margin:14px 0; padding:7px 0;
+    font-size:14px;
+  }
+  .tape-inner { display:inline-block; animation:scroll 30s linear infinite; }
+  .tape span { margin:0 16px; }
+  .up { color:var(--green); } .down { color:var(--red); } .flat { color:var(--gray); }
+  @keyframes scroll { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+  /* ── 애널리스트 사무실 (애니메이션 무대) ── */
+  .stage {
+    position:relative; height:330px; overflow:hidden;
+    border:4px solid var(--wood-d);
+    background:
+      linear-gradient(180deg, #2a1d12 0 42%, transparent 42%),
+      repeating-linear-gradient(90deg, var(--wood) 0 46px, var(--wood-d) 46px 50px);
+  }
+  /* 벽면 장식 */
+  .stage::before {
+    content:""; position:absolute; left:0; right:0; top:0; height:42%;
+    background:repeating-linear-gradient(90deg, transparent 0 78px, rgba(0,0,0,.22) 78px 82px);
+    pointer-events:none;
+  }
+  .actor {
+    position:absolute; width:64px; margin-left:-32px; text-align:center;
+    transition:left .9s cubic-bezier(.4,0,.2,1), top .9s cubic-bezier(.4,0,.2,1);
+  }
+  .actor .body { animation:bob 1.6s ease-in-out infinite; }
+  .actor.talking .body { animation:bob .45s ease-in-out infinite; }
+  .actor.dim { opacity:.35; filter:grayscale(.7); }
+  @keyframes bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+  .tag {
+    display:inline-block; margin-top:3px; font-size:10px; padding:1px 5px;
+    background:#000; border:2px solid var(--line); color:var(--ink); white-space:nowrap;
+  }
+  .actor.on .tag { border-color:var(--gold); color:var(--gold); }
+  .deskbar { height:7px; background:var(--wood-d); border-top:2px solid #3d2814; margin-top:2px; }
+
+  /* 말풍선 */
+  .bubble {
+    position:absolute; bottom:100%; left:50%; transform:translateX(-50%);
+    margin-bottom:9px; background:#fffbe9; color:#2b2b2b; border:3px solid #333;
+    border-radius:4px; font-size:11px; line-height:1.55; padding:6px 8px;
+    width:186px; text-align:left; opacity:0; pointer-events:none;
+    transition:opacity .2s; z-index:5;
+  }
+  .bubble.show { opacity:1; }
+  .bubble::after {
+    content:""; position:absolute; bottom:-9px; left:50%; margin-left:-5px;
+    border:5px solid transparent; border-top-color:#333;
+  }
+  .bubble.bull { border-color:#2e7d32; } .bubble.bull::after { border-top-color:#2e7d32; }
+  .bubble.bear { border-color:#c62828; } .bubble.bear::after { border-top-color:#c62828; }
+  .bubble.judge { border-color:#f9a825; } .bubble.judge::after { border-top-color:#f9a825; }
+
+  /* 무대 점수 집계판 */
+  .scorepanel {
+    position:absolute; left:50%; top:46%; transform:translate(-50%,-50%) scale(.9);
+    background:rgba(0,0,0,.88); border:3px solid var(--gold); padding:12px 18px;
+    opacity:0; transition:opacity .3s, transform .3s; z-index:8; pointer-events:none;
+    min-width:210px;
+  }
+  .scorepanel.show { opacity:1; transform:translate(-50%,-50%) scale(1); }
+  .scorepanel h5 { font-size:11px; color:var(--gold); text-align:center; margin-bottom:8px; }
+  .scorerow2 {
+    display:flex; justify-content:space-between; align-items:baseline; gap:12px;
+    font-size:12px; margin-top:5px;
+  }
+  .scorerow2 b { font-size:17px; color:var(--ink); font-weight:normal; }
+  .scorerow2.top b { color:var(--green); } .scorerow2.bot b { color:var(--red); }
+
+  /* 무대 자막 · 컨트롤 */
+  .caption {
+    position:absolute; left:0; right:0; bottom:8px; text-align:center;
+    font-size:11px; color:var(--ink); pointer-events:none;
+  }
+  .caption span {
+    background:rgba(0,0,0,.72); border:2px solid var(--line); padding:4px 12px;
+    display:inline-block;
+  }
+  .stagectl { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; align-items:center; }
+  .stagectl .muted { margin-left:auto; }
+  @media (max-width:560px) {
+    .stage { height:300px; }
+    .bubble { width:132px; font-size:10px; padding:5px 6px; }
+    /* 양끝 캐릭터는 말풍선을 안쪽으로 밀어 무대를 벗어나지 않게 */
+    .actor[data-side="L"] .bubble { left:0; transform:none; }
+    .actor[data-side="L"] .bubble::after { left:22px; }
+    .actor[data-side="R"] .bubble { left:auto; right:0; transform:none; }
+    .actor[data-side="R"] .bubble::after { left:auto; right:18px; }
+  }
+
+  /* ── 종합 진단 카드 ── */
+  .sumgrid {
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(225px, 1fr));
+    gap:10px; margin-bottom:8px;
+  }
+  .sumcard { border:3px solid var(--line); background:var(--panel); padding:10px 12px;
+    box-shadow:0 4px 0 rgba(0,0,0,.5); }
+  .sumcard.s-강세 { border-color:var(--green); }
+  .sumcard.s-약세 { border-color:var(--red); }
+  .sumhead { display:flex; justify-content:space-between; align-items:baseline; gap:6px; }
+  .sumname { font-size:13px; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .sumprice { font-size:11px; white-space:nowrap; }
+  .sig { display:inline-block; font-size:11px; padding:2px 8px; border:2px solid; }
+  .sig.강세 { color:var(--green); border-color:var(--green); }
+  .sig.중립 { color:var(--gray); border-color:var(--gray); }
+  .sig.약세 { color:var(--red); border-color:var(--red); }
+  .scorerow { display:flex; align-items:center; gap:10px; margin:7px 0 4px; }
+  .bigscore { font-size:26px; line-height:1; }
+  .bigscore small { font-size:11px; color:var(--dim); }
+  .s-강세 .bigscore { color:var(--green); }
+  .s-약세 .bigscore { color:var(--red); }
+  .s-중립 .bigscore { color:var(--gray); }
+  .subscores { font-size:10px; color:#8d7ba8; margin-bottom:5px; letter-spacing:0; }
+  .sumsay { font-size:11px; color:var(--dim); line-height:1.6; }
+  .disclaimer { text-align:center; font-size:10px; color:#6d5f7d; margin:4px 0 10px; }
+
+  /* 용어 설명 */
+  .helpbox { border:3px solid var(--line); background:var(--panel); margin-bottom:16px; }
+  .helpbox summary {
+    cursor:pointer; padding:9px 12px; font-size:12px; color:var(--gold);
+    list-style:none; user-select:none;
+  }
+  .helpbox summary::-webkit-details-marker { display:none; }
+  .helpbox[open] summary { border-bottom:2px solid var(--line); }
+  .helpgrid {
+    display:grid; grid-template-columns:auto 1fr; gap:7px 12px;
+    padding:11px 13px; font-size:11px; line-height:1.65;
+  }
+  .helpgrid b { color:var(--ink); font-weight:normal; white-space:nowrap; }
+  .helpgrid span { color:var(--dim); }
+  .helpgrid u { color:#ffb74d; text-decoration:none; }
+  @media (max-width:560px) { .helpgrid { grid-template-columns:1fr; gap:2px 0; }
+    .helpgrid b { margin-top:7px; } }
+  .detailbtn { width:100%; margin:16px 0 4px; }
+
+  /* ── 계좌 드로다운 ── */
+  .ddbox { border:3px solid var(--line); background:var(--panel); padding:12px 14px; margin-bottom:8px; }
+  .ddtop { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:9px; }
+  .ddval { font-size:22px; line-height:1; }
+  .ddval.정상 { color:var(--green); } .ddval.경고 { color:#ffb74d; } .ddval.정지 { color:var(--red); }
+  .ddsub { font-size:11px; color:var(--dim); }
+  .ddbar { position:relative; height:16px; background:#000; border:2px solid var(--line); }
+  .ddfill { height:100%; background:var(--green); }
+  .ddfill.경고 { background:#ffb74d; } .ddfill.정지 { background:var(--red); }
+  .ddmark { position:absolute; top:-3px; bottom:-3px; width:2px; background:#fff; opacity:.55; }
+  .ddmark span { position:absolute; top:-14px; left:-13px; font-size:9px; color:var(--dim); white-space:nowrap; }
+  .ddhint { font-size:10px; color:#6d5f7d; margin-top:8px; line-height:1.6; }
+
+  /* ── 토론 ── */
+  .debate {
+    border:3px solid var(--line); background:var(--panel); margin-bottom:12px;
+    box-shadow:0 4px 0 rgba(0,0,0,.5);
+  }
+  .dhead {
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    padding:10px 12px; border-bottom:3px solid var(--line); background:#000;
+  }
+  .dname { font-size:13px; color:var(--gold); }
+  .dwin { font-size:11px; padding:2px 8px; border:2px solid; }
+  .dwin.강세 { color:var(--green); border-color:var(--green); }
+  .dwin.약세 { color:var(--red); border-color:var(--red); }
+  .dwin.팽팽 { color:var(--gray); border-color:var(--gray); }
+  .dissue { font-size:11px; color:var(--dim); padding:8px 12px; border-bottom:2px solid #2c2138; line-height:1.6; }
+  .dsides { display:grid; grid-template-columns:1fr 1fr; gap:0; }
+  .dside { padding:10px 12px; font-size:11px; line-height:1.7; color:var(--dim); }
+  .dside.bull { border-right:2px solid #2c2138; }
+  .dside h4 { font-size:11px; margin-bottom:6px; }
+  .dside.bull h4 { color:var(--green); }
+  .dside.bear h4 { color:var(--red); }
+  .dside p { margin-bottom:5px; }
+  .dside b { color:var(--ink); font-weight:normal; }
+  .dconc { padding:10px 12px; border-top:3px solid var(--line); font-size:11px; line-height:1.7; }
+  .dwatch { color:#8d7ba8; font-size:10px; margin-top:5px; }
+  @media (max-width:560px) {
+    .dsides { grid-template-columns:1fr; }
+    .dside.bull { border-right:none; border-bottom:2px solid #2c2138; }
+  }
+
+  /* ── 종목 진단 보드 ── */
+  .board-title {
+    margin:18px 0 8px; font-size:14px; color:var(--gold); text-align:center;
+    letter-spacing:1px;
+  }
+  .board-wrap { overflow-x:auto; border:3px solid var(--line); background:var(--panel); }
+  table.board { border-collapse:collapse; width:100%; min-width:640px; font-size:11px; }
+  .board th {
+    background:#000; color:var(--dim); padding:7px 8px; text-align:left;
+    border-bottom:3px solid var(--line); white-space:nowrap;
+  }
+  .board td { padding:8px; border-bottom:2px solid #2c2138; vertical-align:top; }
+  .board tr:last-child td { border-bottom:none; }
+  .board .sname { color:var(--ink); white-space:nowrap; }
+  .board .sprice { font-size:10px; white-space:nowrap; }
+  .vbadge {
+    display:inline-block; font-size:10px; padding:1px 6px; border:2px solid; margin-bottom:3px;
+    white-space:nowrap;
+  }
+  .v-상승추세 { color:var(--green); border-color:var(--green); }
+  .v-하락추세 { color:var(--red); border-color:var(--red); }
+  .v-과열 { color:#ffb74d; border-color:#ffb74d; }
+  .v-과매도 { color:#64b5f6; border-color:#64b5f6; }
+  .v-횡보 { color:var(--gray); border-color:var(--gray); }
+  .v-튼튼 { color:var(--green); border-color:var(--green); }
+  .v-보통 { color:var(--gray); border-color:var(--gray); }
+  .v-주의 { color:var(--red); border-color:var(--red); }
+  .v-과열민심 { color:var(--red); border-color:var(--red); }
+  .v-시끌 { color:#ffb74d; border-color:#ffb74d; }
+  .v-보통민심 { color:var(--gray); border-color:var(--gray); }
+  .v-조용 { color:#64b5f6; border-color:#64b5f6; }
+  .hitb {
+    font-size:10px; padding:1px 6px; border:2px solid; white-space:nowrap;
+  }
+  .hitb.ok { color:var(--green); border-color:var(--green); }
+  .hitb.no { color:var(--red); border-color:var(--red); }
+  .scorebar {
+    text-align:center; font-size:11px; color:var(--dim); line-height:1.8;
+    border:3px solid var(--line); background:#000; padding:8px 10px; margin-top:10px;
+  }
+  .scorebar b { color:var(--gold); }
+  .say { color:var(--dim); line-height:1.5; margin-top:2px; }
+  .fnum { color:#8d7ba8; font-size:10px; margin-top:2px; }
+
+  /* ── 필터 ── */
+  .filters { display:flex; gap:6px; margin:16px 0 10px; flex-wrap:wrap; align-items:center; }
+  .fbtn {
+    font-family:inherit; font-size:12px; cursor:pointer; color:var(--ink);
+    background:var(--panel); border:3px solid var(--line); padding:6px 12px;
+    box-shadow:0 3px 0 var(--line);
+  }
+  .fbtn:active, .fbtn.on { transform:translateY(3px); box-shadow:none; background:var(--line); }
+  .fbtn.on { color:var(--gold); }
+  select {
+    font-family:inherit; font-size:12px; background:var(--panel); color:var(--ink);
+    border:3px solid var(--line); padding:6px; margin-left:auto;
+  }
+
+  /* ── 뉴스 카드 ── */
+  .card {
+    display:flex; gap:12px; background:var(--panel); border:3px solid var(--line);
+    box-shadow:0 4px 0 rgba(0,0,0,.5); padding:12px; margin-bottom:12px;
+  }
+  .card .avatar { flex-shrink:0; padding-top:2px; }
+  .chead { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:6px; }
+  .badge { font-size:11px; padding:2px 8px; border:2px solid; }
+  .badge.호재 { color:var(--green); border-color:var(--green); }
+  .badge.악재 { color:var(--red); border-color:var(--red); }
+  .badge.중립 { color:var(--gray); border-color:var(--gray); }
+  .tick { font-size:11px; color:var(--gold); }
+  .stars { font-size:11px; color:var(--gold); letter-spacing:1px; }
+  .sent { font-size:10px; color:#7ec8ff; margin-left:auto; }
+  .title { font-size:14px; line-height:1.5; margin-bottom:6px; }
+  .reason { font-size:12px; color:var(--dim); line-height:1.6; margin-bottom:6px; }
+  .meta { font-size:10px; color:#6d5f7d; }
+  .empty {
+    text-align:center; padding:50px 10px; color:var(--dim); font-size:13px;
+    border:3px dashed var(--line); margin-top:16px; line-height:2;
+  }
+  .count-note { font-size:11px; color:var(--dim); margin:4px 0 40px; text-align:center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="sign">📈 토스뉴스알리미 상황실</div>
+    <div class="updated" id="updated"></div>
+    <button class="rbtn" onclick="location.reload()">🔄 화면 새로고침</button>
+  </header>
+
+  <div class="tape"><div class="tape-inner" id="tape"></div></div>
+
+  <div id="ddWrap" style="display:none">
+    <div class="board-title">◆ 내 계좌 ◆</div>
+    <div class="ddbox" id="ddBox"></div>
+  </div>
+
+  <div class="board-title">◆ 오늘의 종합 진단 ◆</div>
+  <div class="sumgrid" id="sumgrid"></div>
+  <div class="disclaimer">AI 애널리스트 팀의 참고용 의견이에요 — 투자 판단과 책임은 본인에게! 🙏</div>
+
+  <details class="helpbox">
+    <summary>❓ 용어가 헷갈릴 때 눌러보세요</summary>
+    <div class="helpgrid">
+      <b>종합 점수</b><span>네 팀 점수를 합친 값 (100점 만점). 65점 넘으면 🟢, 40점 아래면 🔴</span>
+      <b>📰 뉴스 점수</b><span>최근 3일 좋은 뉴스와 나쁜 뉴스를 중요도까지 따져 매긴 점수</span>
+      <b>🦊 차트 점수</b><span>값이 오르는 흐름인지 내리는 흐름인지, 1년 중 어디쯤인지</span>
+      <b>🐰 실적 점수</b><span>회사가 버는 돈에 비해 주가가 싼지 비싼지, 배당은 주는지</span>
+      <b>🎧 관심도 점수</b><span>토스 커뮤니티에 사람이 얼마나 몰렸는지. <u>너무 몰리면 오히려 감점</u>이에요 (고점 신호로 봄)</span>
+      <b>많이 팔렸어요</b><span>짧은 기간에 급하게 팔려서 값이 눌린 상태 (RSI 30 아래). 반등할 수도, 더 내릴 수도 있어요</span>
+      <b>너무 가파르게<br>올랐어요</b><span>짧은 기간에 급하게 올라 숨 고르기가 올 수 있는 상태 (RSI 70 위)</span>
+      <b>버는 돈 대비 주가</b><span>회사가 1년에 버는 돈의 몇 배 가격에 거래되는지 (PER). 낮으면 싼 편</span>
+      <b>1년 최고~최저 중<br>N% 지점</b><span>0%면 1년 중 가장 쌀 때, 100%면 가장 비쌀 때</span>
+      <b>💰 적정 수량</b><span>"한 번에 계좌의 1%만 잃도록" 계산한 수량. 많이 흔들리는 종목일수록 적게 나와요</span>
+      <b>손절</b><span>여기까지 떨어지면 정리하기로 미리 정해둔 가격</span>
+      <b>고점 대비 낙폭</b><span>내 계좌가 가장 많았을 때보다 지금 얼마나 줄었는지</span>
+      <b>적중 / 빗나감</b><span>"좋은 뉴스"라고 본 다음 날 진짜 올랐는지 채점한 결과</span>
+    </div>
+  </details>
+
+  <div class="board-title">◆ 분석 상황실 ◆</div>
+  <div class="stage" id="stage">
+    <div class="scorepanel" id="scorePanel"></div>
+    <div class="caption" id="caption"></div>
+  </div>
+  <div class="stagectl">
+    <button class="fbtn" id="playBtn">▶ 다시 재생</button>
+    <button class="fbtn" id="skipBtn">⏭ 건너뛰기</button>
+    <span class="muted" id="stageStep"></span>
+  </div>
+
+  <button class="rbtn detailbtn" id="detailBtn">📂 상세 보기 — 진단 보드 · 뉴스 피드</button>
+  <div id="details" style="display:none">
+
+  <div class="board-title" id="debateTitle" style="display:none">◆ 오늘의 토론 ◆</div>
+  <div id="debateArea"></div>
+
+  <div class="board-title">◆ 종목 진단 보드 ◆</div>
+  <div class="board-wrap">
+    <table class="board">
+      <thead><tr><th>종목</th><th>차트 (30일)</th><th>💰 적정 수량</th><th>🦊 타로 · 기술적 분석</th><th>🐰 디아나 · 재무제표</th><th>🎧 바이브 · 민심</th></tr></thead>
+      <tbody id="boardBody"></tbody>
+    </table>
+  </div>
+  <div class="scorebar" id="scorebar"></div>
+
+  <div class="board-title">◆ 뉴스 피드 ◆</div>
+  <div class="filters" id="filters">
+    <button class="fbtn on" data-f="전체">전체</button>
+    <button class="fbtn" data-f="호재">🟢 호재</button>
+    <button class="fbtn" data-f="악재">🔴 악재</button>
+    <button class="fbtn" data-f="중립">⚪ 중립</button>
+    <button class="fbtn" data-f="적중">✅ 적중</button>
+    <button class="fbtn" data-f="빗나감">❌ 빗나감</button>
+    <select id="tickSel"><option value="">모든 종목</option></select>
+  </div>
+
+  <div id="list"></div>
+
+  </div><!-- /details -->
+</div>
+
+<script src="feed.js"></script>
+<script>
+// ── 픽셀 스프라이트 (캔버스 렌더링) ──
+function sprite(map, palette, px) {
+  const cv = document.createElement('canvas');
+  cv.width = map[0].length * px;
+  cv.height = map.length * px;
+  cv.className = 'sprite';
+  cv.style.display = 'block';
+  cv.style.margin = '0 auto';
+  const ctx = cv.getContext('2d');
+  map.forEach((row, y) => {
+    [...row].forEach((ch, x) => {
+      if (palette[ch]) {
+        ctx.fillStyle = palette[ch];
+        ctx.fillRect(x * px, y * px, px, px);
+      }
+    });
+  });
+  const box = document.createElement('div');
+  box.appendChild(cv);
+  return box;
+}
+
+const BULL = [  // 불리 — 호재 담당 황소
+  "..g......g..",
+  ".gg......gg.",
+  ".gBBBBBBBBg.",
+  ".BBBBBBBBBB.",
+  "BBWBBBBBBWBB",
+  "BBKBBBBBBKBB",
+  ".BBBnnnnBBB.",
+  ".BBnppppnBB.",
+  "..nnnnnnnn..",
+  "..GGGGGGGG..",
+  "..GGGGGGGG..",
+  "..BB....BB..",
+];
+const BEAR = [  // 베어 — 악재 담당 곰
+  ".bb......bb.",
+  ".bbb....bbb.",
+  "..BBBBBBBB..",
+  ".BBBBBBBBBB.",
+  "BBWBBBBBBWBB",
+  "BBKBBBBBBKBB",
+  ".BBBmmmmBBB.",
+  ".BBmkkkkmBB.",
+  "..mmmmmmmm..",
+  "..RRRRRRRR..",
+  "..RRRRRRRR..",
+  "..BB....BB..",
+];
+const OWL = [  // 부엉 — 중립 담당 부엉이
+  ".v........v.",
+  ".vv..vv..vv.",
+  "..VVVVVVVV..",
+  ".VWWVVVVWWV.",
+  ".VWKVVVVKWV.",
+  ".VVVVooVVVV.",
+  ".VVVVVVVVVV.",
+  ".VsVsVsVsVs.",
+  "..VVVVVVVV..",
+  "..VVVVVVVV..",
+  "...oo..oo...",
+  "............",
+];
+const FOX = [  // 타로 — 기술적 분석 담당 여우
+  ".ff......ff.",
+  ".fff....fff.",
+  ".fFFFFFFFFf.",
+  ".FFFFFFFFFF.",
+  "FGGFFFFFGGFF",
+  "FGKGFFFFGKGF",
+  ".FFFwwwwFFF.",
+  ".FFwwkkwwFF.",
+  "..wwwwwwww..",
+  "..TTTTTTTT..",
+  "..TTTTTTTT..",
+  "..FF....FF..",
+];
+const RABBIT = [  // 디아나 — 재무제표 담당 토끼
+  "..r......r..",
+  "..rr....rr..",
+  "..rr....rr..",
+  ".RRRRRRRRRR.",
+  "RRWRRRRRRWRR",
+  "RRKRRRRRRKRR",
+  ".RRRppppRRR.",
+  ".RRppkkppRR.",
+  "..pppppppp..",
+  "..DDDDDDDD..",
+  "..DDDDDDDD..",
+  "..RR....RR..",
+];
+const VIBE = [  // 바이브 — 커뮤니티 민심 담당 (선글라스)
+  "..p......p..",
+  ".pppppppppp.",
+  ".pPPPPPPPPp.",
+  ".PPPPPPPPPP.",
+  "PKKKPPPPKKKP",
+  "PKKKPPPPKKKP",
+  ".PPPmmmmPPP.",
+  ".PPmmkkmmPP.",
+  "..mmmmmmmm..",
+  "..HHHHHHHH..",
+  "..HHHHHHHH..",
+  "..PP....PP..",
+];
+const PAL = {
+  BULL: { g:"#cfd8dc", B:"#69b34c", W:"#fff", K:"#222", n:"#f3c98b", p:"#e78fb3", G:"#2e7d32" },
+  BEAR: { b:"#8d6e63", B:"#a1887f", W:"#fff", K:"#222", m:"#d7ccc8", k:"#5d4037", R:"#c62828" },
+  OWL:  { v:"#b0bec5", V:"#90a4ae", W:"#fff", K:"#222", o:"#ff9800", s:"#78909c" },
+  FOX:  { f:"#ef6c00", F:"#ff9800", G:"#4dd0e1", K:"#222", w:"#fff3e0", k:"#5d4037", T:"#37474f" },
+  RABBIT:{ r:"#f8bbd0", R:"#fce4ec", W:"#fff", K:"#222", p:"#f48fb1", k:"#ad1457", D:"#7b1fa2" },
+  VIBE: { p:"#7e57c2", P:"#9575cd", K:"#111", m:"#d1c4e9", k:"#4527a0", H:"#311b92" },
+};
+const CHAR = {
+  "호재": { map:BULL, pal:PAL.BULL, name:"불리", role:"호재 담당" },
+  "악재": { map:BEAR, pal:PAL.BEAR, name:"베어", role:"악재 담당" },
+  "중립": { map:OWL,  pal:PAL.OWL,  name:"부엉", role:"중립 담당" },
+  "타로": { map:FOX,  pal:PAL.FOX,  name:"타로", role:"기술적 분석" },
+  "디아나": { map:RABBIT, pal:PAL.RABBIT, name:"디아나", role:"기본적 분석" },
+  "바이브": { map:VIBE, pal:PAL.VIBE, name:"바이브", role:"센티먼트" },
+};
+
+const FEED = window.NEWS_FEED || [];
+const META = window.FEED_META || {};
+
+// ── 헤더 & 전광판 ──
+(function(){
+  const el = document.getElementById('updated');
+  if (!META.updated) { el.textContent = "아직 실행 기록이 없어요"; return; }
+  const ageMin = Math.round((Date.now() - new Date(META.updated.replace(' ', 'T')).getTime()) / 60000);
+  if (ageMin > 40) {
+    el.innerHTML = `마지막 확인: ${META.updated} <span class="stale">(⚠ ${ageMin >= 60 ? Math.floor(ageMin/60) + '시간 ' + (ageMin%60) + '분' : ageMin + '분'} 전 데이터 — 최신 시세는 <b>새로고침.bat</b> 실행)</span>`;
+  } else {
+    el.textContent = `마지막 확인: ${META.updated} (${ageMin <= 1 ? '방금' : ageMin + '분 전'})`;
+  }
+})();
+
+const tape = document.getElementById('tape');
+const stocks = META.stocks || [];
+if (stocks.length) {
+  const items = stocks.map(s => {
+    const cls = s.change > 0 ? 'up' : s.change < 0 ? 'down' : 'flat';
+    const arrow = s.change > 0 ? '▲' : s.change < 0 ? '▼' : '─';
+    const chg = s.change == null ? '' : `${arrow}${Math.abs(s.change)}%`;
+    return `<span class="${cls}">${s.ticker} $${s.price ?? '-'} ${chg}</span>`;
+  }).join('');
+  tape.innerHTML = items + items;  // 이어붙여서 무한 스크롤
+} else {
+  tape.innerHTML = '<span class="flat">시세 데이터 대기 중...</span>';
+}
+
+// ── 애널리스트 사무실 (오늘 집계) ──
+const today = META.updated ? META.updated.slice(0,10) : new Date().toISOString().slice(0,10);
+const counts = { 호재:0, 악재:0, 중립:0 };
+FEED.forEach(n => { if ((n.analyzedAt||'').slice(0,10) === today) counts[n.verdict]++; });
+const TEAM = window.TEAM || [];
+const upCnt = TEAM.filter(t => (t.tech||{})["판정"] === "상승추세").length;
+const strongCnt = TEAM.filter(t => t["등급"] === "튼튼").length;
+const feverCnt = TEAM.filter(t => t["민심"] === "과열").length;
+const lines = {
+  호재: c => c ? `오늘 호재<br>${c}건 발견!` : "호재 찾는 중...",
+  악재: c => c ? `오늘 악재<br>${c}건 경보!` : "악재 감시 중...",
+  중립: c => c ? `중립 뉴스<br>${c}건 걸러냄` : "뉴스 읽는 중...",
+  타로: () => TEAM.length ? `상승추세<br>${upCnt}종목 포착` : "차트 보는 중...",
+  디아나: () => TEAM.length ? `재무 튼튼<br>${strongCnt}종목!` : "재무제표 뒤지는 중.",
+  바이브: () => !TEAM.length ? "민심 수집 중..." :
+    (feverCnt ? `커뮤니티 과열<br>${feverCnt}종목 경보!` : "민심 평온~"),
+};
+// ── 분석 상황실: 캐릭터가 움직이며 분석 과정을 재연 ──
+const Stage = (function(){
+  const stage = document.getElementById('stage');
+  const caption = document.getElementById('caption');
+  const stepLbl = document.getElementById('stageStep');
+  const DEBATES = window.DEBATES || [];
+  const ROLES = ["호재","악재","중립","타로","디아나","바이브"];
+  // 자리 배치 (무대 기준 %): 뒷줄 3명 · 앞줄 3명
+  const DESK = {
+    호재:  {left:'17%', top:'34%'}, 악재:  {left:'50%', top:'34%'},
+    중립:  {left:'83%', top:'34%'}, 타로:  {left:'17%', top:'64%'},
+    디아나:{left:'50%', top:'64%'}, 바이브:{left:'83%', top:'64%'},
+  };
+  const CENTER = { 호재:{left:'27%',top:'52%'}, 악재:{left:'73%',top:'52%'},
+                   중립:{left:'50%',top:'30%'} };
+
+  const actors = {};
+  ROLES.forEach(v => {
+    const c = CHAR[v];
+    const el = document.createElement('div');
+    el.className = 'actor';
+    Object.assign(el.style, DESK[v]);
+    const lx = parseFloat(DESK[v].left);          // 좁은 화면에서 말풍선 방향 결정
+    el.dataset.side = lx <= 25 ? 'L' : lx >= 75 ? 'R' : 'C';
+    const body = document.createElement('div');
+    body.className = 'body';
+    body.appendChild(sprite(c.map, c.pal, 4));
+    const say = document.createElement('div');
+    say.className = 'bubble';
+    el.append(say, body);
+    el.insertAdjacentHTML('beforeend',
+      `<div class="deskbar"></div><span class="tag">${c.name}</span>`);
+    stage.appendChild(el);
+    actors[v] = { el, say };
+  });
+
+  let timer = null, seq = [], idx = 0, typing = null;
+
+  const clearAll = () => {
+    ROLES.forEach(v => {
+      actors[v].say.classList.remove('show');
+      actors[v].el.classList.remove('talking','on','dim');
+      Object.assign(actors[v].el.style, DESK[v]);
+    });
+  };
+  const type = (el, text, done) => {          // 타자기 효과
+    clearInterval(typing);
+    el.innerHTML = '';
+    const chars = [...text];
+    let i = 0;
+    typing = setInterval(() => {
+      el.innerHTML = chars.slice(0, ++i).join('');
+      if (i >= chars.length) { clearInterval(typing); done && done(); }
+    }, 18);
+  };
+
+  const panel = document.getElementById('scorePanel');
+
+  // 점수판을 띄우고 숫자를 0부터 올린다
+  function showPanel(scored) {
+    const top = scored.slice(0, 2), bot = scored.slice(-2).reverse();
+    panel.innerHTML = '<h5>◆ 오늘의 점수 집계 ◆</h5>' +
+      top.map(t => `<div class="scorerow2 top"><span>${esc(t.name)}</span><b class="cu" data-to="${t["점수"]["종합"]}">0</b></div>`).join('') +
+      `<div class="scorerow2" style="opacity:.4"><span>⋯</span><span></span></div>` +
+      bot.map(t => `<div class="scorerow2 bot"><span>${esc(t.name)}</span><b class="cu" data-to="${t["점수"]["종합"]}">0</b></div>`).join('');
+    panel.classList.add('show');
+    panel.querySelectorAll('.cu').forEach((el, i) =>
+      setTimeout(() => countUp(el, Number(el.dataset.to), 1100, '점'), 220 * i));
+  }
+  const hidePanel = () => panel.classList.remove('show');
+
+  // 한 스텝 = {who, text, cap, cls, move, hold, panel}
+  function play(step) {
+    caption.innerHTML = step.cap ? `<span>${step.cap}</span>` : '';
+    step.panel ? showPanel(step.panel) : hidePanel();
+    ROLES.forEach(v => {
+      actors[v].el.classList.remove('talking','on');
+      if (step.who && v !== step.who) actors[v].say.classList.remove('show');
+      actors[v].el.classList.toggle('dim', !!step.focus && v !== step.who);
+    });
+    if (step.move) {
+      ROLES.forEach(v => Object.assign(actors[v].el.style,
+        (step.move[v] || DESK[v])));
+    }
+    if (step.who) {
+      const a = actors[step.who];
+      a.el.classList.add('talking','on');
+      a.say.className = `bubble show ${step.cls || ''}`;
+      type(a.say, step.text || '');
+    }
+  }
+
+  function next() {
+    if (idx >= seq.length) {
+      stepLbl.textContent = '분석 완료 ✓';
+      caption.innerHTML = '<span>오늘의 분석이 끝났어요 — 아래에서 결과를 확인하세요 👇</span>';
+      clearAll();
+      return;
+    }
+    const step = seq[idx++];
+    stepLbl.textContent = `${idx} / ${seq.length}`;
+    play(step);
+    timer = setTimeout(next, step.hold || 2600);
+  }
+
+  function build() {
+    const s = [];
+    const nm = t => (TEAM.find(x => x.ticker === t) || {}).name || t;
+    s.push({ cap: `📅 ${META.updated || ''} · 미국 장 마감 — 분석을 시작합니다`, hold: 1900 });
+
+    const total = counts.호재 + counts.악재 + counts.중립;
+    s.push({ who:'중립', focus:true, cap:'1단계 · 뉴스 수집',
+             text: total ? `오늘 뉴스 ${total}건을 읽었어요.` : '새 뉴스를 기다리는 중...' });
+    if (counts.호재) s.push({ who:'호재', focus:true, cls:'bull', cap:'1단계 · 뉴스 판정',
+                              text:`호재 ${counts.호재}건 발견! 🟢` });
+    if (counts.악재) s.push({ who:'악재', focus:true, cls:'bear', cap:'1단계 · 뉴스 판정',
+                              text:`악재 ${counts.악재}건 경보! 🔴` });
+
+    const t = TEAM.find(x => (x.tech||{})["판정"]) || {};
+    s.push({ who:'타로', focus:true, cap:'2단계 · 차트 분석',
+             text: TEAM.length ? `차트 다 봤어요. 상승추세 ${upCnt}종목,\n과열은 조심해야겠네요.`
+                               : '차트 보는 중...' });
+    s.push({ who:'디아나', focus:true, cap:'3단계 · 재무제표',
+             text: TEAM.length ? `재무제표 확인 완료.\n튼튼한 종목은 ${strongCnt}개예요.` : '재무제표 뒤지는 중...' });
+    s.push({ who:'바이브', focus:true, cap:'4단계 · 커뮤니티 민심',
+             text: TEAM.length ? (feverCnt ? `커뮤니티 과열 ${feverCnt}종목!\n개미가 몰릴 땐 조심 🔥`
+                                           : '민심은 평온해요~') : '민심 수집 중...' });
+
+    const scored = [...TEAM].filter(x => x["점수"]).sort((a,b) => b["점수"]["종합"] - a["점수"]["종합"]);
+    if (scored.length) {
+      s.push({ cap:'5단계 · 네 팀의 점수를 합산합니다', panel:scored, hold:4200 });
+    }
+
+    // ── 토론 ──
+    const d = DEBATES[0];
+    if (d) {
+      const pts = txt => (txt||'').split('\n')
+        .map(l => l.replace(/^#.*/,'').replace(/\*\*/g,'').trim())
+        .filter(l => /^\d/.test(l)).slice(0,3)
+        .map(l => l.replace(/^\d+\.\s*/,''));
+      const bull = pts(d.bull), bear = pts(d.bear);
+      s.push({ cap:`🥊 ${d.name} — 불리 vs 베어 토론 시작!`, move:CENTER, hold:1600 });
+      const n = Math.max(bull.length, bear.length);
+      for (let i = 0; i < n; i++) {
+        if (bull[i]) s.push({ who:'호재', cls:'bull', move:CENTER, focus:true,
+                              cap:`강세 ${i+1}번째 논거`, text:clip(bull[i], 62), hold:3400 });
+        if (bear[i]) s.push({ who:'악재', cls:'bear', move:CENTER, focus:true,
+                              cap:`베어의 반박 ${i+1}`, text:clip(bear[i], 62), hold:3400 });
+      }
+      const emo = d["우세"] === '강세' ? '🟢' : d["우세"] === '약세' ? '🔴' : '⚖️';
+      s.push({ who:'중립', cls:'judge', move:CENTER, focus:true, cap:'⚖️ 부엉의 판정',
+               text:`${emo} ${d["우세"]} 우세!\n${clip(d["핵심쟁점"] || d["결론"] || '', 58)}`, hold:4200 });
+    }
+    return s;
+  }
+
+  function start() {
+    clearTimeout(timer); clearInterval(typing);
+    clearAll(); idx = 0; seq = build(); next();
+  }
+  function skip() {
+    clearTimeout(timer); clearInterval(typing);
+    idx = seq.length; next();
+  }
+  document.getElementById('playBtn').onclick = start;
+  document.getElementById('skipBtn').onclick = skip;
+  return { start };
+})();
+Stage.start();
+
+// ── 내 계좌 드로다운 ──
+(function(){
+  const eq = META.equity || {};
+  const log = eq.log || [];
+  if (!log.length || eq.peak == null) return;
+  document.getElementById('ddWrap').style.display = '';
+  const cur = log[log.length - 1];
+  const dd = eq.dd ?? 0, lvl = eq.level || '정상';
+  const WARN = 10, STOP = 20;                     // config의 경고/정지선과 동일
+  const pct = Math.min(100, Math.abs(dd) / STOP * 100);
+  const won = n => n.toLocaleString('ko-KR');
+  document.getElementById('ddBox').innerHTML = `
+    <div class="ddtop">
+      <span class="ddval ${lvl}">${dd.toFixed(1)}%</span>
+      <span class="ddsub">고점 대비 낙폭 · <b style="color:var(--ink)">${lvl}</b></span>
+      <span class="ddsub" style="margin-left:auto">
+        현재 ${won(cur.value)} / 고점 ${won(eq.peak)}<br>${cur.date} 기준</span>
+    </div>
+    <div class="ddbar">
+      <div class="ddfill ${lvl}" style="width:${pct}%"></div>
+      <div class="ddmark" style="left:${WARN / STOP * 100}%"><span>경고 -${WARN}%</span></div>
+      <div class="ddmark" style="left:calc(100% - 2px)"><span>정지 -${STOP}%</span></div>
+    </div>
+    <div class="ddhint">계좌 평가액을 기록하면 자동으로 갱신돼요 —
+      <b>news_alert.py --equity 금액</b> · 경고·정지선을 넘으면 텔레그램으로 알림이 갑니다.</div>`;
+})();
+
+// ── 오늘의 토론 (불리 vs 베어) ──
+(function(){
+  const DEBATES = window.DEBATES || [];
+  if (!DEBATES.length) return;
+  document.getElementById('debateTitle').style.display = '';
+  const area = document.getElementById('debateArea');
+  // "1. **제목**: 내용" 형태를 문단으로
+  const fmt = txt => esc(txt || '')
+    .replace(/^#.*$/gm, '')
+    .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+    .split('\n').map(l => l.trim()).filter(Boolean)
+    .map(l => `<p>${l}</p>`).join('');
+  DEBATES.forEach(d => {
+    const win = d["우세"] || '팽팽';
+    const emoji = win === '강세' ? '🟢' : win === '약세' ? '🔴' : '⚖️';
+    const el = document.createElement('div');
+    el.className = 'debate';
+    el.innerHTML = `
+      <div class="dhead">
+        <span class="dname">🥊 ${esc(d.name)}</span>
+        ${d.score != null ? `<span class="stars">${d.score}점</span>` : ''}
+        <span class="dwin ${win}">${emoji} ${esc(win)} 우세</span>
+      </div>
+      ${d["핵심쟁점"] ? `<div class="dissue">💬 <b>쟁점</b> — ${esc(d["핵심쟁점"])}</div>` : ''}
+      <div class="dsides">
+        <div class="dside bull"><h4>🟢 불리 · 강세 논거</h4>${fmt(d.bull)}</div>
+        <div class="dside bear"><h4>🔴 베어 · 반박</h4>${fmt(d.bear)}</div>
+      </div>
+      ${d["결론"] ? `<div class="dconc">⚖️ <b>부엉의 판정</b> — ${esc(d["결론"])}
+        ${d["지켜볼것"] ? `<div class="dwatch">👀 지켜볼 것: ${esc(d["지켜볼것"])}</div>` : ''}</div>` : ''}`;
+    area.appendChild(el);
+  });
+})();
+
+// ── 종목 진단 보드 ──
+function sparkline(vals) {
+  const cv = document.createElement('canvas');
+  cv.width = 84; cv.height = 26; cv.style.imageRendering = 'pixelated';
+  if (!vals || vals.length < 2) return cv;
+  const ctx = cv.getContext('2d');
+  const min = Math.min(...vals), max = Math.max(...vals), span = max - min || 1;
+  const up = vals[vals.length-1] >= vals[0];
+  ctx.strokeStyle = up ? '#5dd97c' : '#ff6b6b';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  vals.forEach((v, i) => {
+    const x = 2 + i * (80 / (vals.length - 1));
+    const y = 22 - (v - min) / span * 18;
+    i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+  });
+  ctx.stroke();
+  return cv;
+}
+const boardBody = document.getElementById('boardBody');
+if (!TEAM.length) {
+  boardBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--dim);padding:22px">다음 확인 때 타로와 디아나가 진단을 시작해요!</td></tr>';
+}
+const PRICE = {};
+(META.stocks || []).forEach(s => PRICE[s.ticker] = s);
+
+// ── 오늘의 종합 진단 (신호등 카드) ──
+(function(){
+  const grid = document.getElementById('sumgrid');
+  if (!TEAM.length) {
+    grid.innerHTML = '<div class="empty" style="grid-column:1/-1">다음 확인 때 종합 진단이 시작돼요!</div>';
+    return;
+  }
+  [...TEAM].sort((a, b) => ((b["점수"]||{})["종합"] ?? 0) - ((a["점수"]||{})["종합"] ?? 0))
+    .forEach(t => {
+      const p = PRICE[t.ticker] || {};
+      const cls = p.change > 0 ? 'up' : p.change < 0 ? 'down' : 'flat';
+      const sig = t["신호"] || '중립';
+      const emoji = sig === '강세' ? '🟢' : sig === '약세' ? '🔴' : '⚪';
+      const sc = t["점수"] || {};
+      const card = document.createElement('div');
+      card.className = `sumcard s-${sig}`;
+      card.innerHTML = `
+        <div class="sumhead">
+          <span class="sumname">${esc(t.name)} <span style="color:var(--dim)">${esc(t.ticker)}</span></span>
+          <span class="sumprice ${cls}">$${p.price ?? '-'} ${p.change != null ? (p.change > 0 ? '+' : '') + p.change + '%' : ''}</span>
+        </div>
+        <div class="scorerow">
+          <span class="bigscore"><i class="cu" data-to="${sc["종합"] ?? ''}">0</i><small>점</small></span>
+          <span class="sig ${sig}">${emoji} ${sig}</span>
+        </div>
+        <div class="subscores" title="네 팀이 각각 매긴 점수입니다">📰뉴스 ${sc["뉴스"] ?? '-'} · 🦊차트 ${sc["기술"] ?? '-'} · 🐰실적 ${sc["재무"] ?? '-'} · 🎧관심도 ${sc["민심"] ?? '-'}</div>
+        <div class="sumsay">${esc(t["총평"] || '진단 대기 중')}</div>`;
+      grid.appendChild(card);
+    });
+  // 화면에 들어올 때 점수가 0부터 올라가게
+  const io = new IntersectionObserver((entries, obs) => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      countUp(e.target, Number(e.target.dataset.to));
+      obs.unobserve(e.target);
+    });
+  }, { threshold: .4 });
+  grid.querySelectorAll('.cu').forEach(el => {
+    if (el.dataset.to === '') { el.textContent = '-'; return; }
+    io.observe(el);
+  });
+  // 탭이 가려져 있어 관찰이 늦어져도 숫자가 0에 머물지 않게
+  const fillRest = () => grid.querySelectorAll('.cu').forEach(el => {
+    if (el.dataset.to !== '' && el.textContent === '0') {
+      io.unobserve(el); countUp(el, Number(el.dataset.to));
+    }
+  });
+  setTimeout(fillRest, 2500);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) fillRest(); });
+})();
+
+// ── 상세 보기 토글 ──
+(function(){
+  const btn = document.getElementById('detailBtn');
+  const details = document.getElementById('details');
+  const apply = show => {
+    details.style.display = show ? '' : 'none';
+    btn.textContent = show ? '📁 간단히 보기' : '📂 상세 보기 — 진단 보드 · 뉴스 피드';
+    localStorage.setItem('tossnews_details', show ? '1' : '0');
+  };
+  btn.onclick = () => apply(details.style.display === 'none');
+  apply(localStorage.getItem('tossnews_details') === '1');
+})();
+
+TEAM.forEach(t => {
+  const tech = t.tech || {}, fund = t.fund || {};
+  const p = PRICE[t.ticker] || {};
+  const cls = p.change > 0 ? 'up' : p.change < 0 ? 'down' : 'flat';
+  const z = t.size || {};
+  const sizeCell = !z.qty ? '<span style="color:var(--sub)">-</span>' : `
+    <div class="sname">${z.qty}주</div>
+    <div class="fnum">${(z.invest/10000).toFixed(0)}만원 · 비중 ${z.weight}%${z.capped ? ' ⚠상한' : ''}</div>
+    <div class="fnum">손절 ${z.stop} · 최대손실 ${(z.risk/10000).toFixed(1)}만</div>`;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><div class="sname">${esc(t.name)}</div>
+        <div class="sprice ${cls}">$${p.price ?? '-'} (${p.change > 0 ? '+' : ''}${p.change ?? '-'}%)</div></td>
+    <td class="sparkcell"></td>
+    <td>${sizeCell}</td>
+    <td><span class="vbadge v-${esc(tech["판정"]||'횡보')}">${esc(tech["판정"]||'-')}</span>
+        <div class="say">${esc(t["타로"]||'')}</div>
+        <div class="fnum" title="RSI ${tech.rsi ?? '-'} · 20일 등락 · 52주 범위 내 위치">${rsiWord(tech.rsi)}
+          · 한 달 ${tech.chg20 > 0 ? '+' : ''}${tech.chg20 ?? '-'}%
+          · 1년 최고~최저 중 ${tech.pos52 ?? '-'}% 지점</div></td>
+    <td><span class="vbadge v-${esc(t["등급"]||'보통')}">${esc(t["등급"]||'-')}</span>
+        <div class="say">${esc(t["디아나"]||'')}</div>
+        <div class="fnum" title="PER ${esc(fund.per||'-')} · PBR ${esc(fund.pbr||'-')} · 배당수익률 ${esc(fund.div||'-')}">버는 돈 대비 주가 ${esc(fund.per||'-')}${perWord(fund.per) ? ` (${perWord(fund.per)})` : ''}
+          · 배당 ${esc(fund.div||'-')}</div></td>
+    <td><span class="vbadge v-${t["민심"]==='과열'?'과열민심':t["민심"]==='보통'?'보통민심':esc(t["민심"]||'조용')}">${esc(t["민심"]||'-')}</span>
+        <div class="say">${esc(t["바이브"]||'')}</div>
+        <div class="fnum">토스 댓글 시간당 ${t.heat ?? '-'}개${t.rank ? ' · 인기 '+t.rank+'위' : ''}</div></td>`;
+  tr.querySelector('.sparkcell').appendChild(sparkline(tech.spark));
+  boardBody.appendChild(tr);
+});
+
+// ── 적중률 현황 ──
+(function(){
+  const cutoff = new Date(Date.now() - 30*864e5).toISOString().slice(0,10);
+  const st = { 호재:[0,0], 악재:[0,0] };
+  FEED.forEach(n => {
+    if (st[n.verdict] && 'hit1' in n && (n.createdAt||'') >= cutoff) {
+      st[n.verdict][1]++;
+      if (n.hit1) st[n.verdict][0]++;
+    }
+  });
+  const el = document.getElementById('scorebar');
+  const segs = Object.entries(st).filter(([,v]) => v[1] > 0)
+    .map(([k,[h,n]]) => `${k==='호재'?'🟢':'🔴'}${k} <b>${Math.round(h/n*100)}%</b> (${h}/${n})`);
+  el.innerHTML = segs.length
+    ? `🎯 판정 적중률 (최근 30일 · 다음 거래일 기준): ${segs.join(' · ')}<br>` +
+      `<span style="font-size:10px">호재→다음날 상승, 악재→다음날 하락이면 적중. 뉴스 카드에서 건별 결과를 볼 수 있어요.</span>`
+    : `🎯 판정 적중률: 아직 채점된 판정이 없어요 — 뉴스가 하루 지나면 자동으로 채점됩니다!`;
+})();
+
+// ── 종목 셀렉트 ──
+const tickSel = document.getElementById('tickSel');
+[...new Set(FEED.map(n => n.ticker))].forEach(t => {
+  const name = (FEED.find(n => n.ticker === t) || {}).name || t;
+  tickSel.insertAdjacentHTML('beforeend', `<option value="${t}">${name}(${t})</option>`);
+});
+
+// ── 뉴스 카드 ──
+let curF = "전체";
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function clip(s, n){ s = (s||'').trim(); return s.length <= n ? s : s.slice(0, n).replace(/[\s,·…]+$/,'') + '…'; }
+
+/* 숫자가 0에서부터 올라가는 효과.
+   탭이 가려져 있으면 requestAnimationFrame이 멈추므로,
+   시간이 지나면 최종값으로 확정하는 안전장치를 함께 둔다. */
+function countUp(el, to, ms = 900, suffix = '') {
+  if (to == null || isNaN(to)) { el.textContent = '-'; return; }
+  let done = false;
+  const finish = () => { if (!done) { done = true; el.textContent = to + suffix; } };
+  setTimeout(finish, ms + 250);
+  if (document.hidden) { finish(); return; }        // 안 보이는 상태면 바로 확정
+  const t0 = performance.now();
+  (function step(now){
+    if (done) return;
+    const p = Math.min(1, (now - t0) / ms);
+    const eased = 1 - Math.pow(1 - p, 3);           // 끝으로 갈수록 느려짐
+    el.textContent = Math.round(to * eased) + suffix;
+    if (p < 1) requestAnimationFrame(step); else done = true;
+  })(t0);
+}
+
+/* 어려운 지표를 쉬운 말로 */
+function rsiWord(v){
+  if (v == null) return '';
+  return v >= 70 ? '너무 가파르게 올랐어요' : v >= 55 ? '오르는 힘이 있어요'
+       : v >= 45 ? '보통이에요' : v >= 30 ? '힘이 빠졌어요' : '많이 팔렸어요';
+}
+function perWord(per){
+  const n = parseFloat(String(per || '').replace(/[^\d.]/g, ''));
+  if (!n) return '';
+  return n < 15 ? '싼 편' : n < 25 ? '보통' : n < 40 ? '비싼 편' : '많이 비쌈';
+}
+function render() {
+  const list = document.getElementById('list');
+  list.innerHTML = '';
+  const matchF = n =>
+    curF === "전체" ? true :
+    curF === "적중" ? ('hit1' in n && n.hit1) :
+    curF === "빗나감" ? ('hit1' in n && !n.hit1) :
+    n.verdict === curF;
+  const rows = FEED.filter(n => matchF(n) && (!tickSel.value || n.ticker === tickSel.value));
+  if (!rows.length) {
+    list.innerHTML = (curF === "적중" || curF === "빗나감")
+      ? `<div class="empty">아직 채점된 뉴스가 없어요 🎯<br>
+        호재/악재 뉴스는 하루 지나면 자동으로 채점됩니다!</div>`
+      : `<div class="empty">아직 분석한 뉴스가 없어요 🕵️<br>
+        다음 미국 장 마감 후에 애널리스트들이 출근합니다!</div>`;
+    return;
+  }
+  rows.forEach(n => {
+    const c = CHAR[n.verdict] || CHAR["중립"];
+    const card = document.createElement('div');
+    card.className = 'card';
+    const av = document.createElement('div'); av.className = 'avatar';
+    av.appendChild(sprite(c.map, c.pal, 3));
+    card.appendChild(av);
+    const stars = "★".repeat(n.importance) + "☆".repeat(5 - n.importance);
+    card.insertAdjacentHTML('beforeend', `<div style="min-width:0">
+      <div class="chead">
+        <span class="badge ${n.verdict}">${n.verdict}</span>
+        <span class="tick">${esc(n.name)}(${esc(n.ticker)})</span>
+        <span class="stars">${stars}</span>
+        ${'chk1' in n ? `<span class="hitb ${n.hit1?'ok':'no'}">다음날 ${n.chk1>0?'+':''}${n.chk1}% ${n.hit1?'✅':'❌'}</span>` : ''}
+        ${'chk5' in n ? `<span class="hitb ${n.hit5?'ok':'no'}">5일 ${n.chk5>0?'+':''}${n.chk5}%</span>` : ''}
+        ${n.alerted ? '<span class="sent">📨 알림 전송됨</span>' : ''}
+      </div>
+      <div class="title">${esc(n.title)}</div>
+      <div class="reason">💡 ${esc(n.reason)}</div>
+      <div class="meta">${esc(n.source)} · ${esc((n.createdAt||'').replace('T',' ').slice(0,16))}</div>
+    </div>`);
+    list.appendChild(card);
+  });
+  list.insertAdjacentHTML('beforeend',
+    `<div class="count-note">${rows.length}건 표시 중 (최근 300건 보관)</div>`);
+}
+document.querySelectorAll('.fbtn').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.fbtn').forEach(x => x.classList.remove('on'));
+  b.classList.add('on'); curF = b.dataset.f; render();
+});
+tickSel.onchange = render;
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+# 비밀키가 들어있는 실제 설정 — 절대 올리지 않음 (GitHub Secrets 사용)
+config.json
+
+# 로컬 실행 부산물
+__pycache__/
+*.pyc
+news_log.txt

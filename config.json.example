@@ -1,0 +1,30 @@
+{
+  "종목": [
+    "AAPL",
+    "MSFT",
+    "NVDA",
+    "GOOGL",
+    "AMZN",
+    "META",
+    "TSLA",
+    "AVGO",
+    "NFLX",
+    "JPM",
+    "005930",
+    "000660",
+    "SOXL",
+    "QQQ",
+    "SPY"
+  ],
+  "확인주기_분": 10,
+  "최소중요도": 3,
+  "즉시알림_최소중요도": 4,
+  "급등락_기준퍼센트": 5,
+  "중립알림": false,
+  "사이클당_최대분석": 20,
+  "뉴스조회_개수": 30,
+  "AI모델": "claude-haiku-4-5-20251001",
+  "텔레그램_토큰": "환경변수 TELEGRAM_TOKEN 또는 여기에_봇토큰",
+  "텔레그램_채팅ID": "환경변수 TELEGRAM_CHAT_ID 또는 여기에_채팅ID",
+  "ANTHROPIC_API_KEY": "환경변수 ANTHROPIC_API_KEY 또는 여기에_API키"
+}

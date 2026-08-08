@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>내 주식 비서</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css">
+<style>
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --bg:#101013; --card:#17171C; --card-2:#1E1E24;
+    --fill:rgba(214,224,239,.09); --line:rgba(217,217,255,.11);
+    --t1:#fff; --t2:rgba(242,246,255,.9); --t3:rgba(216,223,237,.59); --t4:rgba(211,224,243,.42);
+    --up:#F5445A; --down:#4391FF; --blue:#3485FA;
+    --green:#15C47E; --amber:#FFB020;
+    --r:16px;
+  }
+  body {
+    background:var(--bg); color:var(--t2); min-height:100vh;
+    font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif;
+    -webkit-font-smoothing:antialiased; letter-spacing:-.01em;
+    padding-bottom:56px;
+  }
+  .wrap { max-width:600px; margin:0 auto; padding:0 16px; }
+
+  /* 넓은 화면에서는 2단으로 펼쳐 세로 스크롤을 줄인다.
+     좁은 화면에서는 .col 이 display:contents 라 없는 것처럼 동작해 그대로 세로 배치. */
+  .grid { display:block; }
+  .col { display:contents; }
+  @media (min-width:1040px) {
+    .wrap { max-width:1200px; }
+    .grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:0 28px; align-items:start; }
+    .col { display:block; }
+    .col > section:first-child { margin-top:0; }
+    header { padding-bottom:12px; }
+    /* 종목·뉴스가 길어지면 각자 스크롤 (페이지 전체가 길어지지 않게) */
+    #rows { max-height:620px; overflow-y:auto; }
+    #newsList { max-height:620px; overflow-y:auto; }
+    #rows::-webkit-scrollbar { width:8px; }
+    #rows::-webkit-scrollbar-thumb { background:var(--fill); border-radius:99px; }
+    #newsList::-webkit-scrollbar { width:8px; }
+    #newsList::-webkit-scrollbar-thumb { background:var(--fill); border-radius:99px; }
+  }
+  @media (min-width:1440px) {
+    .wrap { max-width:1400px; }
+    .grid { grid-template-columns:minmax(0,1.05fr) minmax(0,1fr); gap:0 32px; }
+    .tiles { gap:10px; }
+  }
+  .num { font-variant-numeric:tabular-nums; }
+  .up { color:var(--up); } .down { color:var(--down); } .flat { color:var(--t3); }
+
+  /* 헤더 */
+  header { padding:26px 0 6px; }
+  h1 { font-size:24px; font-weight:700; color:var(--t1); letter-spacing:-.03em; }
+  .sub { font-size:13px; color:var(--t4); margin-top:6px; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .dot { width:5px; height:5px; border-radius:50%; background:var(--green); display:inline-block; }
+  .dot.old { background:var(--amber); }
+
+  /* 공통 카드 · 섹션 */
+  .card { background:var(--card); border-radius:var(--r); box-shadow:0 0 0 1px var(--fill) inset; }
+  section { margin-top:26px; }
+  .sec-head { display:flex; align-items:baseline; gap:8px; margin:0 4px 10px; }
+  .sec-head h2 { font-size:16px; font-weight:700; color:var(--t1); letter-spacing:-.02em; }
+  .sec-head .hint { font-size:12px; color:var(--t4); }
+  .sec-head .more { margin-left:auto; font-size:13px; color:var(--blue); cursor:pointer;
+    background:none; border:0; font-family:inherit; padding:2px 0; }
+
+
+  /* 요약 타일 */
+  .tiles { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .tile { padding:16px 12px; text-align:center; }
+  .tile .v { font-size:22px; font-weight:700; color:var(--t1); }
+  .tile .k { font-size:12px; color:var(--t4); margin-top:4px; }
+
+  /* 종목 리스트 */
+  .rows { overflow:hidden; }
+  .row {
+    display:flex; align-items:center; gap:12px; padding:13px 16px; cursor:pointer;
+    border-bottom:1px solid var(--line); transition:background .15s;
+  }
+  .row:last-of-type { border-bottom:0; }
+  .row:hover { background:var(--fill); }
+  .ava {
+    width:38px; height:38px; border-radius:12px; flex:0 0 38px; display:grid; place-items:center;
+    font-size:14px; font-weight:700; color:var(--t1); background:var(--card-2);
+  }
+  .rname { flex:1; min-width:0; }
+  .rname .n { font-size:15px; font-weight:600; color:var(--t1); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .rname .t { font-size:12px; color:var(--t4); margin-top:2px; }
+  .rprice { text-align:right; white-space:nowrap; }
+  .rprice .p { font-size:15px; font-weight:600; color:var(--t1); }
+  .rprice .c { font-size:12.5px; margin-top:2px; font-weight:600; }
+  .badge {
+    flex:0 0 auto; min-width:44px; text-align:center; padding:5px 8px; border-radius:9px;
+    font-size:13px; font-weight:700; background:var(--card-2);
+  }
+  .badge.강세 { color:var(--up); background:rgba(245,68,90,.13); }
+  .badge.약세 { color:var(--down); background:rgba(67,145,255,.13); }
+  .badge.중립 { color:var(--t3); }
+
+  /* 상세 패널 */
+  .detail { display:none; padding:2px 16px 18px; border-bottom:1px solid var(--line); }
+  .detail.open { display:block; }
+  .dsum { font-size:13.5px; color:var(--t2); line-height:1.6; margin-bottom:14px; }
+  .bars { display:grid; gap:9px; margin-bottom:14px; }
+  .bar { display:grid; grid-template-columns:52px 1fr 30px; align-items:center; gap:10px; font-size:12px; }
+  .bar .bl { color:var(--t4); }
+  .bar .bt { height:6px; border-radius:99px; background:var(--fill); overflow:hidden; }
+  .bar .bf { height:100%; border-radius:99px; background:var(--blue); transition:width .7s cubic-bezier(.2,.8,.2,1); }
+  .bar .bv { text-align:right; color:var(--t2); font-weight:600; }
+  .says { display:grid; gap:8px; }
+  .sayrow { display:flex; gap:9px; font-size:13px; line-height:1.55; color:var(--t3); }
+  .sayrow em { flex:0 0 auto; font-style:normal; }
+  .fnum { font-size:11.5px; color:var(--t4); margin-top:3px; }
+  .sizebox {
+    margin-top:13px; padding:12px 14px; border-radius:12px; background:var(--card-2);
+    font-size:13px; line-height:1.6;
+  }
+  .sizebox b { color:var(--t1); font-weight:700; }
+
+  /* 무대 */
+  .stage {
+    position:relative; height:250px; overflow:hidden; border-radius:var(--r);
+    background:linear-gradient(180deg,#1B1B22 0 44%, #15151A 44%);
+    box-shadow:0 0 0 1px var(--fill) inset;
+  }
+  .actor { position:absolute; width:60px; margin-left:-30px; text-align:center;
+    transition:left .9s cubic-bezier(.4,0,.2,1), top .9s cubic-bezier(.4,0,.2,1); }
+  .actor .body { animation:bob 1.7s ease-in-out infinite; }
+  .actor.talking .body { animation:bob .45s ease-in-out infinite; }
+  .actor.dim { opacity:.28; }
+  @keyframes bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+  .tag { display:inline-block; margin-top:3px; font-size:10.5px; padding:2px 7px; border-radius:99px;
+    background:var(--fill); color:var(--t3); white-space:nowrap; }
+  .actor.on .tag { background:var(--blue); color:#fff; }
+  .bubble {
+    position:absolute; bottom:100%; left:50%; transform:translateX(-50%); margin-bottom:9px;
+    background:#fff; color:#17171C; border-radius:12px; font-size:12px; line-height:1.5;
+    padding:8px 10px; width:180px; text-align:left; opacity:0; pointer-events:none;
+    transition:opacity .2s; z-index:5; font-weight:500;
+    box-shadow:0 6px 20px rgba(0,0,0,.45);
+  }
+  .bubble.show { opacity:1; }
+  .bubble::after { content:""; position:absolute; bottom:-6px; left:50%; margin-left:-6px;
+    border:6px solid transparent; border-top-color:#fff; border-bottom:0; }
+  .bubble.bull { background:#FFE9EC; } .bubble.bull::after { border-top-color:#FFE9EC; }
+  .bubble.bear { background:#E3EEFF; } .bubble.bear::after { border-top-color:#E3EEFF; }
+  .bubble.judge { background:#FFF3D6; } .bubble.judge::after { border-top-color:#FFF3D6; }
+  .caption { position:absolute; left:0; right:0; bottom:10px; text-align:center; font-size:12px; }
+  .caption span { background:rgba(0,0,0,.6); backdrop-filter:blur(6px); color:var(--t2);
+    padding:5px 12px; border-radius:99px; display:inline-block; }
+  .scorepanel {
+    position:absolute; left:50%; top:44%; transform:translate(-50%,-50%) scale(.94);
+    background:rgba(10,10,12,.92); backdrop-filter:blur(8px); border-radius:14px;
+    box-shadow:0 0 0 1px var(--line) inset; padding:14px 18px; min-width:200px;
+    opacity:0; transition:opacity .3s, transform .3s; z-index:8; pointer-events:none;
+  }
+  .scorepanel.show { opacity:1; transform:translate(-50%,-50%) scale(1); }
+  .scorepanel h5 { font-size:11px; color:var(--t4); text-align:center; margin-bottom:9px; font-weight:600; }
+  .sp-row { display:flex; justify-content:space-between; gap:14px; font-size:13px; margin-top:6px; color:var(--t2); }
+  .sp-row b { font-size:16px; font-weight:700; color:var(--t1); }
+  .sp-row.top b { color:var(--up); } .sp-row.bot b { color:var(--down); }
+  .ctl { display:flex; gap:6px; margin-top:10px; align-items:center; }
+  .btn {
+    font-family:inherit; font-size:13px; cursor:pointer; color:var(--t2);
+    background:var(--card); border:0; box-shadow:0 0 0 1px var(--fill) inset;
+    padding:8px 14px; border-radius:10px; transition:background .15s;
+  }
+  .btn:hover { background:var(--card-2); }
+  .btn.pri { background:var(--blue); color:#fff; box-shadow:none; }
+  .ctl .step { margin-left:auto; font-size:12px; color:var(--t4); }
+
+  /* 토론 */
+  .deb { padding:16px; margin-bottom:10px; }
+  .deb-h { display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+  .deb-h .n { font-size:15px; font-weight:700; color:var(--t1); }
+  .pill { font-size:12px; font-weight:600; padding:4px 9px; border-radius:99px; background:var(--card-2); color:var(--t3); }
+  .pill.강세 { color:var(--up); background:rgba(245,68,90,.13); }
+  .pill.약세 { color:var(--down); background:rgba(67,145,255,.13); }
+  .issue { font-size:13px; color:var(--t3); background:var(--card-2); border-radius:10px; padding:10px 12px; margin-bottom:12px; line-height:1.55; }
+  .deb-h .caret { margin-left:auto; font-size:12px; color:var(--t4); }
+  .deb.fold { cursor:pointer; }
+  .deb.fold:hover { background:var(--card-2); }
+  .deb.fold .sides { display:none; }
+  .sides { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .side { border-radius:12px; padding:11px 12px; font-size:12.5px; line-height:1.62; color:var(--t3); background:var(--card-2); }
+  .side h4 { font-size:12px; margin-bottom:7px; font-weight:700; }
+  .side.bull h4 { color:var(--up); } .side.bear h4 { color:var(--down); }
+  .side p { margin-bottom:6px; }
+  .side b { color:var(--t2); font-weight:600; }
+  .verdict { margin-top:12px; padding:12px 14px; border-radius:12px;
+    background:rgba(52,133,250,.09); font-size:13px; line-height:1.6; color:var(--t2); }
+  .verdict .w { display:block; font-size:11.5px; color:var(--t4); margin-top:6px; }
+
+  /* 뉴스 */
+  .chips { display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
+  .chip {
+    font-family:inherit; font-size:13px; cursor:pointer; color:var(--t3); background:var(--card);
+    border:0; box-shadow:0 0 0 1px var(--fill) inset; padding:7px 13px; border-radius:99px;
+  }
+  .chip.on { background:var(--t1); color:#101013; box-shadow:none; font-weight:600; }
+  select.chip { appearance:none; padding-right:26px;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M1 1l4 4 4-4' stroke='%23888' fill='none' stroke-width='1.5'/></svg>");
+    background-repeat:no-repeat; background-position:right 10px center; }
+  .news { padding:14px 16px; border-bottom:1px solid var(--line); }
+  .news:last-child { border-bottom:0; }
+  .news-h { display:flex; align-items:center; gap:7px; margin-bottom:6px; flex-wrap:wrap; font-size:12px; }
+  .vtag { font-weight:700; }
+  .vtag.호재 { color:var(--up); } .vtag.악재 { color:var(--down); } .vtag.중립 { color:var(--t3); }
+  .stars { color:var(--amber); font-size:11px; }
+  .hit { font-size:11px; padding:2px 7px; border-radius:99px; font-weight:600; }
+  .hit.ok { color:var(--green); background:rgba(21,196,126,.12); }
+  .hit.no { color:var(--up); background:rgba(245,68,90,.12); }
+  .news .ti { font-size:14px; color:var(--t1); line-height:1.5; font-weight:500; }
+  .news .rs { font-size:12.5px; color:var(--t3); line-height:1.55; margin-top:5px; }
+  .news .mt { font-size:11.5px; color:var(--t4); margin-top:6px; }
+  .empty { text-align:center; padding:40px 16px; color:var(--t4); font-size:13.5px; line-height:1.8; }
+  .scorebar { text-align:center; font-size:12.5px; color:var(--t3); padding:14px; line-height:1.7; }
+  .scorebar b { color:var(--t1); }
+
+  /* 용어 */
+  details.help { padding:0; overflow:hidden; }
+  details.help summary { padding:14px 16px; font-size:14px; color:var(--t2); cursor:pointer; list-style:none; font-weight:600; }
+  details.help summary::-webkit-details-marker { display:none; }
+  details.help[open] summary { border-bottom:1px solid var(--line); }
+  .hgrid { display:grid; grid-template-columns:auto 1fr; gap:9px 14px; padding:14px 16px; font-size:12.5px; line-height:1.6; }
+  .hgrid b { color:var(--t2); font-weight:600; white-space:nowrap; }
+  .hgrid span { color:var(--t4); }
+  .hgrid u { color:var(--amber); text-decoration:none; }
+  .foot { text-align:center; font-size:11.5px; color:var(--t4); margin-top:26px; line-height:1.7; }
+
+  @media (max-width:520px) {
+    .wrap { padding:0 14px; }
+    .sides { grid-template-columns:1fr; }
+    .hgrid { grid-template-columns:1fr; gap:1px 0; }
+    .hgrid b { margin-top:9px; }
+    .stage { height:236px; }
+    .bubble { width:140px; font-size:11px; }
+    .actor[data-side="L"] .bubble { left:0; transform:none; }
+    .actor[data-side="L"] .bubble::after { left:22px; }
+    .actor[data-side="R"] .bubble { left:auto; right:0; transform:none; }
+    .actor[data-side="R"] .bubble::after { left:auto; right:16px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>내 주식 비서</h1>
+    <div class="sub" id="sub"></div>
+  </header>
+
+  <div class="grid">
+  <div class="col">
+
+
+  <section>
+    <div class="sec-head"><h2>오늘 한눈에</h2><span class="hint" id="tileHint"></span></div>
+    <div class="tiles" id="tiles"></div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>종목</h2><span class="hint">점수 순 · 눌러서 자세히</span>
+    </div>
+    <div class="card rows" id="rows"></div>
+  </section>
+
+
+  <section>
+    <div class="sec-head"><h2>뉴스</h2><span class="hint" id="newsHint"></span></div>
+    <div class="chips" id="chips">
+      <button class="chip on" data-f="전체">전체</button>
+      <button class="chip" data-f="호재">호재</button>
+      <button class="chip" data-f="악재">악재</button>
+      <button class="chip" data-f="적중">적중</button>
+      <button class="chip" data-f="빗나감">빗나감</button>
+      <select class="chip" id="tickSel"><option value="">모든 종목</option></select>
+    </div>
+    <div class="card" id="newsList"></div>
+    <div class="card scorebar" id="scorebar" style="margin-top:10px"></div>
+  </section>
+
+  </div><!-- /왼쪽 열 -->
+  <div class="col">
+
+  <section>
+    <div class="sec-head">
+      <h2>분석 상황실</h2>
+      <button class="more" id="stageToggle">접기</button>
+    </div>
+    <div id="stageWrap">
+      <div class="stage" id="stage">
+        <div class="scorepanel" id="scorePanel"></div>
+        <div class="caption" id="caption"></div>
+      </div>
+      <div class="ctl">
+        <button class="btn pri" id="playBtn">다시 재생</button>
+        <button class="btn" id="skipBtn">건너뛰기</button>
+        <span class="step" id="stageStep"></span>
+      </div>
+    </div>
+  </section>
+
+  <section id="debSec" style="display:none">
+    <div class="sec-head"><h2>오늘의 토론</h2><span class="hint">불리 vs 베어</span></div>
+    <div id="debArea"></div>
+  </section>
+
+
+  <section>
+    <details class="help card">
+      <summary>용어가 헷갈릴 때</summary>
+      <div class="hgrid">
+        <b>종합 점수</b><span>네 팀 점수를 합친 값(100점 만점). 65점 위면 강세, 40점 아래면 약세</span>
+        <b>뉴스 점수</b><span>최근 3일 좋은 뉴스와 나쁜 뉴스를 중요도까지 따져 매긴 점수</span>
+        <b>차트 점수</b><span>값이 오르는 흐름인지 내리는 흐름인지, 1년 중 어디쯤인지</span>
+        <b>실적 점수</b><span>버는 돈에 비해 주가가 싼지 비싼지, 배당은 주는지</span>
+        <b>관심도 점수</b><span>토스 커뮤니티에 사람이 얼마나 몰렸는지. <u>너무 몰리면 오히려 감점</u>이에요</span>
+        <b>많이 팔렸어요</b><span>짧은 기간에 급하게 팔려 값이 눌린 상태. 반등할 수도, 더 내릴 수도 있어요</span>
+        <b>가파르게 올랐어요</b><span>짧은 기간에 급하게 올라 숨 고르기가 올 수 있는 상태</span>
+        <b>버는 돈 대비 주가</b><span>회사가 1년에 버는 돈의 몇 배 가격에 거래되는지. 낮으면 싼 편</span>
+        <b>적정 수량</b><span>"한 번에 계좌의 1%만 잃도록" 계산한 수량. 많이 흔들리는 종목일수록 적게 나와요</span>
+        <b>손절</b><span>여기까지 떨어지면 정리하기로 미리 정해둔 가격</span>
+        <b>고점 대비 낙폭</b><span>내 계좌가 가장 많았을 때보다 지금 얼마나 줄었는지</span>
+        <b>적중 / 빗나감</b><span>"좋은 뉴스"라고 본 다음 날 진짜 올랐는지 채점한 결과</span>
+      </div>
+    </details>
+  </section>
+
+  </div><!-- /오른쪽 열 -->
+  </div><!-- /grid -->
+
+  <div class="foot">
+    AI가 정리한 참고 자료예요. 투자 판단과 책임은 본인에게 있습니다.<br>
+    최신 시세를 보려면 <b>새로고침.bat</b>을 실행하세요.
+  </div>
+</div>
+
+<script src="feed.js"></script>
+<script>
+"use strict";
+const META = window.FEED_META || {};
+const FEED = window.NEWS_FEED || [];
+const TEAM = window.TEAM || [];
+const DEBATES = window.DEBATES || [];
+
+const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const clip = (s,n) => { s=(s||'').trim(); return s.length<=n ? s : s.slice(0,n).replace(/[\s,·…]+$/,'')+'…'; };
+const won = n => Math.round(n).toLocaleString('ko-KR');
+const cls = v => v > 0 ? 'up' : v < 0 ? 'down' : 'flat';
+const sign = v => (v > 0 ? '+' : '') + v;
+/* 한국 종목(숫자 코드)은 원, 미국은 달러 */
+const price = (tk, v) => v == null ? '-'
+  : /^\d+$/.test(tk) ? won(v) + '원' : '$' + v.toLocaleString('en-US');
+
+function countUp(el, to, ms = 900, suffix = '') {
+  if (to == null || isNaN(to)) { el.textContent = '-'; return; }
+  let done = false;
+  const finish = () => { if (!done) { done = true; el.textContent = to + suffix; } };
+  setTimeout(finish, ms + 250);
+  if (document.hidden) { finish(); return; }
+  const t0 = performance.now();
+  (function step(now){
+    if (done) return;
+    const p = Math.min(1, (now - t0) / ms);
+    el.textContent = Math.round(to * (1 - Math.pow(1 - p, 3))) + suffix;
+    if (p < 1) requestAnimationFrame(step); else done = true;
+  })(t0);
+}
+const rsiWord = v => v == null ? '' :
+  v >= 70 ? '가파르게 올랐어요' : v >= 55 ? '오르는 힘이 있어요' :
+  v >= 45 ? '보통이에요' : v >= 30 ? '힘이 빠졌어요' : '많이 팔렸어요';
+const perWord = per => {
+  const n = parseFloat(String(per||'').replace(/[^\d.]/g,''));
+  return !n ? '' : n < 15 ? '싼 편' : n < 25 ? '보통' : n < 40 ? '비싼 편' : '많이 비쌈';
+};
+
+/* ── 헤더 ── */
+(function(){
+  const el = document.getElementById('sub');
+  if (!META.updated) { el.textContent = '아직 분석 기록이 없어요'; return; }
+  const age = Math.round((Date.now() - new Date(META.updated.replace(' ','T')).getTime())/60000);
+  const old = age > 40;
+  const ago = age <= 1 ? '방금' : age < 60 ? `${age}분 전` : `${Math.floor(age/60)}시간 ${age%60}분 전`;
+  el.innerHTML = `<span class="dot${old?' old':''}"></span> ${META.updated} · ${ago} 기준`
+    + (old ? ' · <span style="color:var(--amber)">새로고침 권장</span>' : '');
+})();
+
+
+/* ── 오늘 한눈에 ── */
+const today = META.updated ? META.updated.slice(0,10) : new Date().toISOString().slice(0,10);
+const counts = { 호재:0, 악재:0, 중립:0 };
+FEED.forEach(n => { if ((n.analyzedAt||'').slice(0,10) === today) counts[n.verdict]++; });
+const scored = [...TEAM].filter(t => t['점수']).sort((a,b) => b['점수']['종합'] - a['점수']['종합']);
+const upCnt = TEAM.filter(t => (t.tech||{})['판정'] === '상승추세').length;
+const strongCnt = TEAM.filter(t => t['등급'] === '튼튼').length;
+const feverCnt = TEAM.filter(t => t['민심'] === '과열').length;
+(function(){
+  const strong = scored.filter(t => t['신호'] === '강세').length;
+  const weak = scored.filter(t => t['신호'] === '약세').length;
+  document.getElementById('tiles').innerHTML = [
+    ['강세', strong, 'var(--up)'], ['중립', scored.length-strong-weak, 'var(--t1)'], ['약세', weak, 'var(--down)']
+  ].map(([k,v,c]) => `<div class="card tile"><div class="v" style="color:${c}">${v}</div><div class="k">${k}</div></div>`).join('');
+  const t = counts.호재+counts.악재+counts.중립;
+  document.getElementById('tileHint').textContent = t ? `오늘 뉴스 ${t}건 분석` : '';
+})();
+
+/* ── 종목 리스트 ── */
+const PRICE = {};
+(META.stocks || []).forEach(s => PRICE[s.ticker] = s);
+(function(){
+  const box = document.getElementById('rows');
+  if (!scored.length) { box.innerHTML = '<div class="empty">다음 확인 때 진단이 시작돼요</div>'; return; }
+  scored.forEach((t, i) => {
+    const p = PRICE[t.ticker] || {}, sc = t['점수'], sig = t['신호'] || '중립';
+    const tech = t.tech || {}, fund = t.fund || {}, z = t.size || {};
+    const row = document.createElement('div');
+    row.className = 'row'; row.dataset.i = i;
+    row.innerHTML = `
+      <div class="ava">${esc((t.name||'?').trim()[0])}</div>
+      <div class="rname"><div class="n">${esc(t.name)}</div><div class="t">${esc(t.ticker)}</div></div>
+      <div class="rprice">
+        <div class="p num">${price(t.ticker, p.price)}</div>
+        <div class="c num ${cls(p.change)}">${p.change != null ? sign(p.change)+'%' : ''}</div>
+      </div>
+      <div class="badge ${sig}"><span class="cu" data-to="${sc['종합']}">0</span></div>`;
+    const det = document.createElement('div');
+    det.className = 'detail';
+    det.innerHTML = `
+      ${t['총평'] ? `<div class="dsum">${esc(t['총평'])}</div>` : ''}
+      <div class="bars">
+        ${[['뉴스',sc['뉴스']],['차트',sc['기술']],['실적',sc['재무']],['관심도',sc['민심']]].map(([k,v])=>`
+          <div class="bar"><span class="bl">${k}</span>
+            <span class="bt"><span class="bf" data-w="${v}" style="width:0"></span></span>
+            <span class="bv num">${v}</span></div>`).join('')}
+      </div>
+      <div class="says">
+        <div class="sayrow"><em>🦊</em><span>${esc(t['타로']||'-')}
+          <div class="fnum">${rsiWord(tech.rsi)} · 한 달 ${sign(tech.chg20 ?? 0)}% · 1년 중 ${tech.pos52 ?? '-'}% 지점</div></span></div>
+        <div class="sayrow"><em>🐰</em><span>${esc(t['디아나']||'-')}
+          <div class="fnum">버는 돈 대비 주가 ${esc(fund.per||'-')}${perWord(fund.per)?` (${perWord(fund.per)})`:''} · 배당 ${esc(fund.div||'-')}</div></span></div>
+        <div class="sayrow"><em>🎧</em><span>${esc(t['바이브']||'-')}
+          <div class="fnum">토스 댓글 시간당 ${t.heat ?? '-'}개${t.rank?` · 인기 ${t.rank}위`:''}</div></span></div>
+      </div>
+      ${z.qty ? `<div class="sizebox">💰 적정 수량 <b>${z.qty}주</b> · ${won(z.invest/10000)}만원 (비중 ${z.weight}%${z.capped?' · 상한 적용':''})
+        <div class="fnum">손절 ${z.stop} · 최대 손실 ${won(z.risk/10000)}만원</div></div>` : ''}`;
+    row.onclick = () => {
+      const open = det.classList.toggle('open');
+      if (open) det.querySelectorAll('.bf').forEach(b =>
+        setTimeout(() => b.style.width = b.dataset.w + '%', 30));
+    };
+    box.append(row, det);
+  });
+  // 점수 카운트업
+  const io = new IntersectionObserver((es, ob) => es.forEach(e => {
+    if (!e.isIntersecting) return;
+    countUp(e.target, Number(e.target.dataset.to)); ob.unobserve(e.target);
+  }), { threshold:.4 });
+  box.querySelectorAll('.cu').forEach(el => io.observe(el));
+  const fill = () => box.querySelectorAll('.cu').forEach(el => {
+    if (el.textContent === '0') { io.unobserve(el); countUp(el, Number(el.dataset.to)); } });
+  setTimeout(fill, 2500);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) fill(); });
+})();
+
+/* ── 픽셀 캐릭터 ── */
+function sprite(map, pal, px) {
+  const cv = document.createElement('canvas');
+  cv.width = map[0].length*px; cv.height = map.length*px;
+  cv.style.cssText = 'display:block;margin:0 auto;image-rendering:pixelated';
+  const c = cv.getContext('2d');
+  map.forEach((row,y) => [...row].forEach((ch,x) => {
+    if (pal[ch]) { c.fillStyle = pal[ch]; c.fillRect(x*px, y*px, px, px); }
+  }));
+  const b = document.createElement('div'); b.appendChild(cv); return b;
+}
+const BULL=["..g......g..",".gg......gg.",".gBBBBBBBBg.",".BBBBBBBBBB.","BBWBBBBBBWBB","BBKBBBBBBKBB",".BBBnnnnBBB.",".BBnppppnBB.","..nnnnnnnn..","..GGGGGGGG..","..GGGGGGGG..","..BB....BB.."];
+const BEAR=[".bb......bb.",".bbb....bbb.","..BBBBBBBB..",".BBBBBBBBBB.","BBWBBBBBBWBB","BBKBBBBBBKBB",".BBBmmmmBBB.",".BBmkkkkmBB.","..mmmmmmmm..","..RRRRRRRR..","..RRRRRRRR..","..BB....BB.."];
+const OWL=[".v........v.",".vv..vv..vv.","..VVVVVVVV..",".VWWVVVVWWV.",".VWKVVVVKWV.",".VVVVooVVVV.",".VVVVVVVVVV.",".VsVsVsVsVs.","..VVVVVVVV..","..VVVVVVVV..","...oo..oo...","............"];
+const FOX=[".ff......ff.",".fff....fff.",".fFFFFFFFFf.",".FFFFFFFFFF.","FGGFFFFFGGFF","FGKGFFFFGKGF",".FFFwwwwFFF.",".FFwwkkwwFF.","..wwwwwwww..","..TTTTTTTT..","..TTTTTTTT..","..FF....FF.."];
+const RAB=["..r......r..","..rr....rr..","..rr....rr..",".RRRRRRRRRR.","RRWRRRRRRWRR","RRKRRRRRRKRR",".RRRppppRRR.",".RRppkkppRR.","..pppppppp..","..DDDDDDDD..","..DDDDDDDD..","..RR....RR.."];
+const VIB=["..p......p..",".pppppppppp.",".pPPPPPPPPp.",".PPPPPPPPPP.","PKKKPPPPKKKP","PKKKPPPPKKKP",".PPPmmmmPPP.",".PPmmkkmmPP.","..mmmmmmmm..","..HHHHHHHH..","..HHHHHHHH..","..PP....PP.."];
+const PAL = {
+  BULL:{g:"#cfd8dc",B:"#F5445A",W:"#fff",K:"#222",n:"#f3c98b",p:"#e78fb3",G:"#B22B3C"},
+  BEAR:{b:"#8d6e63",B:"#4391FF",W:"#fff",K:"#222",m:"#d7ccc8",k:"#5d4037",R:"#2A63B8"},
+  OWL:{v:"#b0bec5",V:"#90a4ae",W:"#fff",K:"#222",o:"#FFB020",s:"#78909c"},
+  FOX:{f:"#ef6c00",F:"#ff9800",G:"#4dd0e1",K:"#222",w:"#fff3e0",k:"#5d4037",T:"#37474f"},
+  RAB:{r:"#f8bbd0",R:"#fce4ec",W:"#fff",K:"#222",p:"#f48fb1",k:"#ad1457",D:"#7b1fa2"},
+  VIB:{p:"#7e57c2",P:"#9575cd",K:"#111",m:"#d1c4e9",k:"#4527a0",H:"#311b92"},
+};
+const CHAR = {
+  호재:{map:BULL,pal:PAL.BULL,name:"불리"}, 악재:{map:BEAR,pal:PAL.BEAR,name:"베어"},
+  중립:{map:OWL,pal:PAL.OWL,name:"부엉"},  타로:{map:FOX,pal:PAL.FOX,name:"타로"},
+  디아나:{map:RAB,pal:PAL.RAB,name:"디아나"}, 바이브:{map:VIB,pal:PAL.VIB,name:"바이브"},
+};
+
+/* ── 분석 상황실 ── */
+const Stage = (function(){
+  const stage = document.getElementById('stage');
+  const caption = document.getElementById('caption');
+  const stepLbl = document.getElementById('stageStep');
+  const panel = document.getElementById('scorePanel');
+  const ROLES = ["호재","악재","중립","타로","디아나","바이브"];
+  const DESK = { 호재:{left:'17%',top:'32%'}, 악재:{left:'50%',top:'32%'}, 중립:{left:'83%',top:'32%'},
+                 타로:{left:'17%',top:'62%'}, 디아나:{left:'50%',top:'62%'}, 바이브:{left:'83%',top:'62%'} };
+  const CENTER = { 호재:{left:'27%',top:'52%'}, 악재:{left:'73%',top:'52%'}, 중립:{left:'50%',top:'28%'} };
+  const actors = {};
+  ROLES.forEach(v => {
+    const c = CHAR[v], el = document.createElement('div');
+    el.className = 'actor'; Object.assign(el.style, DESK[v]);
+    const lx = parseFloat(DESK[v].left);
+    el.dataset.side = lx <= 25 ? 'L' : lx >= 75 ? 'R' : 'C';
+    const body = document.createElement('div'); body.className = 'body';
+    body.appendChild(sprite(c.map, c.pal, 4));
+    const say = document.createElement('div'); say.className = 'bubble';
+    el.append(say, body);
+    el.insertAdjacentHTML('beforeend', `<span class="tag">${c.name}</span>`);
+    stage.appendChild(el);
+    actors[v] = { el, say };
+  });
+  let timer = null, seq = [], idx = 0, typing = null;
+  const clearAll = () => ROLES.forEach(v => {
+    actors[v].say.classList.remove('show');
+    actors[v].el.classList.remove('talking','on','dim');
+    Object.assign(actors[v].el.style, DESK[v]);
+  });
+  const type = (el, text) => {
+    clearInterval(typing); el.innerHTML = '';
+    const ch = [...text]; let i = 0;
+    typing = setInterval(() => { el.innerHTML = ch.slice(0,++i).join('');
+      if (i >= ch.length) clearInterval(typing); }, 18);
+  };
+  function showPanel(list) {
+    const top = list.slice(0,2), bot = list.slice(-2).reverse();
+    panel.innerHTML = '<h5>오늘의 점수</h5>' +
+      top.map(t=>`<div class="sp-row top"><span>${esc(t.name)}</span><b class="cu" data-to="${t['점수']['종합']}">0</b></div>`).join('') +
+      bot.map(t=>`<div class="sp-row bot"><span>${esc(t.name)}</span><b class="cu" data-to="${t['점수']['종합']}">0</b></div>`).join('');
+    panel.classList.add('show');
+    panel.querySelectorAll('.cu').forEach((el,i) =>
+      setTimeout(() => countUp(el, Number(el.dataset.to), 1100), 200*i));
+  }
+  function play(step) {
+    caption.innerHTML = step.cap ? `<span>${step.cap}</span>` : '';
+    step.panel ? showPanel(step.panel) : panel.classList.remove('show');
+    ROLES.forEach(v => {
+      actors[v].el.classList.remove('talking','on');
+      if (step.who && v !== step.who) actors[v].say.classList.remove('show');
+      actors[v].el.classList.toggle('dim', !!step.focus && v !== step.who);
+    });
+    if (step.move) ROLES.forEach(v => Object.assign(actors[v].el.style, step.move[v] || DESK[v]));
+    if (step.who) {
+      const a = actors[step.who];
+      a.el.classList.add('talking','on');
+      a.say.className = `bubble show ${step.cls||''}`;
+      type(a.say, step.text || '');
+    }
+  }
+  function next() {
+    if (idx >= seq.length) {
+      stepLbl.textContent = '완료';
+      caption.innerHTML = '<span>분석이 끝났어요</span>';
+      clearAll(); panel.classList.remove('show'); return;
+    }
+    const st = seq[idx++];
+    stepLbl.textContent = `${idx} / ${seq.length}`;
+    play(st);
+    timer = setTimeout(next, st.hold || 2600);
+  }
+  function build() {
+    const s = [];
+    s.push({ cap:'미국 장 마감 · 분석을 시작합니다', hold:1800 });
+    const tot = counts.호재+counts.악재+counts.중립;
+    s.push({ who:'중립', focus:true, cap:'1. 뉴스 수집', text: tot ? `오늘 뉴스 ${tot}건을 읽었어요.` : '새 뉴스를 기다리는 중...' });
+    if (counts.호재) s.push({ who:'호재', focus:true, cls:'bull', cap:'1. 뉴스 판정', text:`좋은 뉴스 ${counts.호재}건 발견!` });
+    if (counts.악재) s.push({ who:'악재', focus:true, cls:'bear', cap:'1. 뉴스 판정', text:`나쁜 뉴스 ${counts.악재}건 경보!` });
+    s.push({ who:'타로', focus:true, cap:'2. 차트 분석',
+             text: TEAM.length ? `차트 다 봤어요.\n오르는 흐름 ${upCnt}종목.` : '차트 보는 중...' });
+    s.push({ who:'디아나', focus:true, cap:'3. 실적 확인',
+             text: TEAM.length ? `실적 확인 완료.\n튼튼한 종목 ${strongCnt}개예요.` : '실적 보는 중...' });
+    s.push({ who:'바이브', focus:true, cap:'4. 커뮤니티 민심',
+             text: TEAM.length ? (feverCnt ? `사람이 몰린 종목 ${feverCnt}개!\n너무 몰리면 조심해요.` : '분위기는 잔잔해요.') : '민심 수집 중...' });
+    if (scored.length) s.push({ cap:'5. 네 팀의 점수를 합산합니다', panel:scored, hold:4200 });
+    const d = DEBATES[0];
+    if (d) {
+      const pts = t => (t||'').split('\n').map(l=>l.replace(/^#.*/,'').replace(/\*\*/g,'').trim())
+        .filter(l=>/^\d/.test(l)).slice(0,3).map(l=>l.replace(/^\d+\.\s*/,''));
+      const bull = pts(d.bull), bear = pts(d.bear);
+      s.push({ cap:`${d.name} — 토론 시작`, move:CENTER, hold:1600 });
+      for (let i = 0; i < Math.max(bull.length, bear.length); i++) {
+        if (bull[i]) s.push({ who:'호재', cls:'bull', move:CENTER, focus:true, cap:`좋게 보는 이유 ${i+1}`, text:clip(bull[i],60), hold:3400 });
+        if (bear[i]) s.push({ who:'악재', cls:'bear', move:CENTER, focus:true, cap:`반박 ${i+1}`, text:clip(bear[i],60), hold:3400 });
+      }
+      s.push({ who:'중립', cls:'judge', move:CENTER, focus:true, cap:'부엉의 판정',
+               text:`${d['우세']} 우세!\n${clip(d['핵심쟁점']||d['결론']||'',54)}`, hold:4200 });
+    }
+    return s;
+  }
+  function start(){ clearTimeout(timer); clearInterval(typing); clearAll(); idx=0; seq=build(); next(); }
+  function skip(){ clearTimeout(timer); clearInterval(typing); idx=seq.length; next(); }
+  document.getElementById('playBtn').onclick = start;
+  document.getElementById('skipBtn').onclick = skip;
+  document.getElementById('stageToggle').onclick = e => {
+    const w = document.getElementById('stageWrap');
+    const hide = w.style.display !== 'none';
+    w.style.display = hide ? 'none' : '';
+    e.target.textContent = hide ? '펼치기' : '접기';
+    if (!hide) start();
+  };
+  return { start };
+})();
+Stage.start();
+
+/* ── 토론 ── */
+(function(){
+  if (!DEBATES.length) return;
+  document.getElementById('debSec').style.display = '';
+  const area = document.getElementById('debArea');
+  const fmt = t => esc(t||'').replace(/^#.*$/gm,'').replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')
+    .split('\n').map(l=>l.trim()).filter(Boolean).map(l=>`<p>${l}</p>`).join('');
+  DEBATES.forEach((d, i) => {
+    const w = d['우세'] || '팽팽';
+    const el = document.createElement('div');
+    // 첫 카드만 펼쳐두고 나머지는 접어서 화면을 짧게 유지
+    el.className = 'card deb' + (i === 0 ? '' : ' fold');
+    el.innerHTML = `
+      <div class="deb-h"><span class="n">${esc(d.name)}</span>
+        ${d.score != null ? `<span class="pill">${d.score}점</span>` : ''}
+        <span class="pill ${w}">${esc(w)} 우세</span>
+        <span class="caret">${i === 0 ? '접기' : '양측 주장 보기'}</span></div>
+      ${d['핵심쟁점'] ? `<div class="issue">쟁점 — ${esc(d['핵심쟁점'])}</div>` : ''}
+      <div class="sides">
+        <div class="side bull"><h4>좋게 보는 쪽</h4>${fmt(d.bull)}</div>
+        <div class="side bear"><h4>반박</h4>${fmt(d.bear)}</div>
+      </div>
+      ${d['결론'] ? `<div class="verdict">${esc(d['결론'])}
+        ${d['지켜볼것'] ? `<span class="w">지켜볼 것 — ${esc(d['지켜볼것'])}</span>` : ''}</div>` : ''}`;
+    el.onclick = () => {
+      const folded = el.classList.toggle('fold');
+      el.querySelector('.caret').textContent = folded ? '양측 주장 보기' : '접기';
+    };
+    area.appendChild(el);
+  });
+})();
+
+/* ── 뉴스 ── */
+const tickSel = document.getElementById('tickSel');
+[...new Set(FEED.map(n => n.ticker))].forEach(t => {
+  const nm = (FEED.find(n => n.ticker === t) || {}).name || t;
+  tickSel.insertAdjacentHTML('beforeend', `<option value="${t}">${nm}</option>`);
+});
+let curF = '전체';
+function renderNews() {
+  const list = document.getElementById('newsList');
+  const match = n => curF === '전체' ? true
+    : curF === '적중' ? ('hit1' in n && n.hit1)
+    : curF === '빗나감' ? ('hit1' in n && !n.hit1)
+    : n.verdict === curF;
+  const rows = FEED.filter(n => match(n) && (!tickSel.value || n.ticker === tickSel.value));
+  document.getElementById('newsHint').textContent = `${rows.length}건`;
+  if (!rows.length) {
+    list.innerHTML = `<div class="empty">${(curF==='적중'||curF==='빗나감')
+      ? '아직 채점된 뉴스가 없어요<br>뉴스는 하루 지나면 자동으로 채점됩니다'
+      : '아직 분석한 뉴스가 없어요'}</div>`;
+    return;
+  }
+  list.innerHTML = rows.slice(0, 60).map(n => `
+    <div class="news">
+      <div class="news-h">
+        <span class="vtag ${n.verdict}">${n.verdict}</span>
+        <span style="color:var(--t4)">${esc(n.name)}</span>
+        <span class="stars">${'★'.repeat(n.importance)}</span>
+        ${'chk1' in n ? `<span class="hit ${n.hit1?'ok':'no'}">다음날 ${sign(n.chk1)}%</span>` : ''}
+      </div>
+      <div class="ti">${esc(n.title)}</div>
+      <div class="rs">${esc(n.reason)}</div>
+      <div class="mt">${esc(n.source)} · ${esc((n.createdAt||'').replace('T',' ').slice(0,16))}</div>
+    </div>`).join('');
+}
+document.querySelectorAll('.chip[data-f]').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.chip[data-f]').forEach(x => x.classList.remove('on'));
+  b.classList.add('on'); curF = b.dataset.f; renderNews();
+});
+tickSel.onchange = renderNews;
+renderNews();
+
+/* ── 적중률 ── */
+(function(){
+  const cut = new Date(Date.now() - 30*864e5).toISOString().slice(0,10);
+  const st = { 호재:[0,0], 악재:[0,0] };
+  FEED.forEach(n => { if (st[n.verdict] && 'hit1' in n && (n.createdAt||'') >= cut) {
+    st[n.verdict][1]++; if (n.hit1) st[n.verdict][0]++; } });
+  const seg = Object.entries(st).filter(([,v]) => v[1] > 0)
+    .map(([k,[h,t]]) => `${k} <b>${Math.round(h/t*100)}%</b> (${h}/${t})`);
+  document.getElementById('scorebar').innerHTML = seg.length
+    ? `최근 30일 판정 적중률 · ${seg.join(' · ')}<br>
+       <span style="font-size:11.5px;color:var(--t4)">좋은 뉴스 → 다음날 상승이면 적중</span>`
+    : '아직 채점된 판정이 없어요 — 뉴스가 하루 지나면 자동으로 채점됩니다';
+})();
+</script>
+</body>
+</html>
