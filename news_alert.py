@@ -11,6 +11,7 @@
   python news_alert.py --daily      # 미국 장 마감 후 1회: 뉴스분석 + 아침 브리핑 + 실적 알림 (작업 스케줄러용)
   python news_alert.py --price-watch  # 급등락 감시 1회 (작업 스케줄러가 30분마다 실행)
   python news_alert.py --weekly     # 주간 성적표 전송 (작업 스케줄러가 일요일마다 실행)
+  python news_alert.py --commands   # 텔레그램으로 받은 명령(/새로고침, /토론 NVDA 등) 처리
   python news_alert.py --test       # 텔레그램으로 테스트 메시지 전송
   python news_alert.py --get-chat-id  # 봇에게 메시지를 보낸 뒤 실행하면 채팅 ID를 알려줌
   (--daily/--weekly에 --force를 붙이면 중복 가드를 무시하고 강제 실행)
@@ -1063,6 +1064,125 @@ def send_telegram(config, text):
         return False
 
 
+# ---------------- 텔레그램 명령 처리 ----------------
+
+HELP_TEXT = (
+    "🤖 <b>이렇게 시켜보세요</b>\n\n"
+    "<code>/새로고침</code>  최신 시세로 대시보드 갱신\n"
+    "<code>/토론 NVDA</code>  그 종목을 불리 vs 베어가 토론\n"
+    "<code>/토론 NVDA,TSLA</code>  여러 개는 쉼표로\n"
+    "<code>/브리핑</code>  지금 바로 아침 브리핑 받기\n"
+    "<code>/도움말</code>  이 안내 다시 보기\n\n"
+    "명령을 보내면 최대 5분 안에 실행돼요."
+)
+
+
+def fetch_commands(config, state):
+    """봇에게 온 새 메시지에서 명령만 골라낸다.
+
+    내 채팅에서 온 것만 처리한다. 봇 주소를 아는 다른 사람이 말을 걸어도
+    내 계좌 정보로 무언가 실행되면 안 되기 때문.
+    """
+    token = config.get("텔레그램_토큰", "")
+    my_chat = str(config.get("텔레그램_채팅ID", ""))
+    params = {"timeout": 0, "allowed_updates": '["message"]'}
+    offset = state.get("tg_offset")
+    if offset:
+        params["offset"] = offset
+    r = requests.get(f"https://api.telegram.org/bot{token}/getUpdates",
+                     params=params, timeout=20)
+    data = r.json()
+    if not data.get("ok"):
+        log(f"명령 조회 실패: {str(data)[:150]}")
+        return []
+    cmds, last = [], offset
+    for u in data.get("result", []):
+        last = u["update_id"] + 1
+        msg = u.get("message") or {}
+        text = (msg.get("text") or "").strip()
+        chat_id = str((msg.get("chat") or {}).get("id", ""))
+        if chat_id != my_chat:
+            log(f"  다른 사람({chat_id})의 메시지는 무시합니다")
+            continue
+        if text.startswith("/"):
+            cmds.append(text)
+    if last:
+        state["tg_offset"] = last     # 같은 명령을 두 번 실행하지 않도록 표시
+    return cmds
+
+
+# 티커로 인정할 형태만 통과시킨다 (영문 1~5자 또는 숫자 6자리).
+# 명령 문자열이 그대로 다른 곳에 흘러가지 않게 하는 안전장치.
+TICKER_RE = re.compile(r"^(?:[A-Z]{1,5}|\d{6})$")
+
+
+def parse_tickers(arg, config):
+    known = {str(t).upper() for t in config.get("종목", [])}
+    out = []
+    for raw in re.split(r"[,\s]+", arg.upper()):
+        raw = raw.strip()
+        if raw and TICKER_RE.match(raw) and raw not in out:
+            out.append(raw)
+    unknown = [t for t in out if t not in known]
+    return out, unknown
+
+
+def run_commands(config, state):
+    """텔레그램으로 받은 명령을 실행 (GitHub Actions가 5분마다 호출)"""
+    try:
+        cmds = fetch_commands(config, state)
+    except requests.RequestException as e:
+        log(f"명령 조회 실패: {type(e).__name__}")
+        return False
+    if not cmds:
+        log("새 명령 없음")
+        save_state(state)
+        return False
+
+    did_work = False
+    for text in cmds:
+        parts = text.split(maxsplit=1)
+        cmd = parts[0].lstrip("/").split("@")[0]
+        arg = parts[1] if len(parts) > 1 else ""
+        log(f"명령 수신: {text}")
+
+        if cmd in ("도움말", "help", "start"):
+            send_telegram(config, HELP_TEXT)
+
+        elif cmd in ("새로고침", "refresh"):
+            refresh_prices(config, state)
+            m = {x["code"]: x for x in state.get("macro", [])}
+            vix = m.get(".VIX")
+            extra = f"\n공포지수 {vix['value']:.1f} {vix.get('mood','')}" if vix else ""
+            send_telegram(config, "🔄 <b>대시보드를 갱신했어요</b>" + extra)
+            did_work = True
+
+        elif cmd in ("토론", "debate"):
+            tickers, unknown = parse_tickers(arg, config)
+            if not tickers:
+                send_telegram(config, "종목을 알려주세요. 예) <code>/토론 NVDA</code>")
+                continue
+            if unknown:
+                send_telegram(config, "감시 목록에 없는 종목이에요: "
+                                      + esc(", ".join(unknown))
+                              + "\n먼저 config의 종목에 추가해 주세요.")
+                continue
+            send_telegram(config, f"🥊 <b>{esc(', '.join(tickers))}</b> 토론을 시작할게요. 20초쯤 걸려요.")
+            run_debates(config, load_team(), load_feed(), tickers=tickers)
+            did_work = True
+
+        elif cmd in ("브리핑", "briefing"):
+            send_telegram(config, "🌅 브리핑을 만들고 있어요. 1~2분 걸려요.")
+            daily_run(config, state, force=True)
+            did_work = True
+
+        else:
+            send_telegram(config, f"모르는 명령이에요: {esc(text)}\n\n" + HELP_TEXT)
+
+    save_state(state)
+    return did_work
+
+
 def get_chat_id(config):
     token = config.get("텔레그램_토큰", "")
     r = requests.get(f"https://api.telegram.org/bot{token}/getUpdates", timeout=15)
@@ -1476,6 +1596,31 @@ def last_us_close():
     return close.timestamp(), now
 
 
+def daily_run(config, state, force=False):
+    """아침 브리핑 1회 (스케줄 실행 + 텔레그램 /브리핑 명령 공용)"""
+    # 최근 뉴욕 16:00(장 마감) 이후 아직 안 돌았으면만 실행 (중복 방지)
+    close_ts, ny_now = last_us_close()
+    if float(state.get("last_daily", 0)) >= close_ts and not force:
+        log(f"오늘 장 마감분은 이미 확인함 (뉴욕 {ny_now.strftime('%m-%d %H:%M')}) — 종료")
+        return False
+    log(f"일일 확인 시작 (뉴욕 {ny_now.strftime('%m-%d %H:%M')})")
+    # 브리핑 모드: 개별 알림은 초중요 뉴스만, 나머지는 브리핑 1통에 요약
+    daily_config = dict(config)
+    daily_config["최소중요도"] = int(config.get("즉시알림_최소중요도", 4))
+    result = run_cycle(daily_config, state)
+    earnings = {}
+    try:
+        earnings = fetch_earnings(state, config)
+        send_earnings_alerts(config, state, earnings)
+    except (requests.RequestException, ValueError) as e:
+        log(f"실적 캘린더 조회 실패: {e}")
+    send_telegram(config, build_briefing(state, result, earnings))
+    state["last_daily"] = time.time()
+    save_state(state)
+    log(f"일일 확인 완료 — 브리핑 1통 + 개별 알림 {result['sent']}건 전송")
+    return True
+
+
 def main():
     config = load_config()
 
@@ -1561,32 +1706,16 @@ def main():
         return
 
     if "--daily" in sys.argv:
-        # 작업 스케줄러용: 최근 뉴욕 16:00(장 마감) 이후 아직 안 돌았을 때만 실행
-        close_ts, ny_now = last_us_close()
-        if float(state.get("last_daily", 0)) >= close_ts and "--force" not in sys.argv:
-            log(f"오늘 장 마감분은 이미 확인함 (뉴욕 {ny_now.strftime('%m-%d %H:%M')}) — 종료")
-            return
-        log(f"일일 확인 시작 (뉴욕 {ny_now.strftime('%m-%d %H:%M')})")
-        # 브리핑 모드: 개별 알림은 초중요 뉴스만, 나머지는 브리핑 1통에 요약
-        daily_config = dict(config)
-        daily_config["최소중요도"] = int(config.get("즉시알림_최소중요도", 4))
-        result = run_cycle(daily_config, state)
-        earnings = {}
-        try:
-            earnings = fetch_earnings(state, config)
-            send_earnings_alerts(config, state, earnings)
-        except (requests.RequestException, ValueError) as e:
-            log(f"실적 캘린더 조회 실패: {e}")
-        briefing = build_briefing(state, result, earnings)
-        send_telegram(config, briefing)
-        state["last_daily"] = time.time()
-        save_state(state)
-        log(f"일일 확인 완료 — 브리핑 1통 + 개별 알림 {result['sent']}건 전송")
+        daily_run(config, state, force="--force" in sys.argv)
+        return
+
+    if "--commands" in sys.argv:
+        run_commands(config, state)
         return
 
     # 모르는 옵션을 줬는데 조용히 무한 감시 루프로 빠지지 않도록 검사
     KNOWN = {"--once", "--daily", "--weekly", "--refresh", "--price-watch",
-             "--debate", "--test", "--get-chat-id", "--force"}
+             "--debate", "--commands", "--test", "--get-chat-id", "--force"}
     unknown = [a for a in sys.argv[1:] if a.startswith("-") and a not in KNOWN]
     if unknown:
         log(f"모르는 옵션입니다: {' '.join(unknown)}")

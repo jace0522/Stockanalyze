@@ -66,6 +66,24 @@
     background:none; border:0; font-family:inherit; padding:2px 0; }
 
 
+  /* 실행 버튼 — 정적 페이지라 실행 가능한 곳으로 보내주는 링크 */
+  .acts { display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
+  .act {
+    display:inline-flex; align-items:center; gap:6px; text-decoration:none;
+    /* 폰에서 손가락으로 누르기 편하도록 최소 44px 확보 */
+    min-height:44px; padding:0 17px; border-radius:99px; font-size:13.5px; font-weight:600;
+    color:var(--t2); background:var(--card); box-shadow:0 0 0 1px var(--fill) inset;
+    transition:background .15s;
+  }
+  .act:hover { background:var(--card-2); }
+  .act.primary { background:var(--blue); color:#fff; box-shadow:none; }
+  .act.primary:hover { background:#2a76e8; }
+  .actnote { font-size:11.5px; color:var(--t4); margin-top:8px; line-height:1.6; }
+  .actnote code {
+    font-family:inherit; font-size:11.5px; color:var(--t3);
+    background:var(--card-2); padding:2px 6px; border-radius:5px;
+  }
+
   /* 시장 풍향계 — 개별 종목을 보기 전에 전체 분위기부터 */
   .macro { display:flex; gap:8px; overflow-x:auto; padding:2px; scrollbar-width:none; }
   .macro::-webkit-scrollbar { display:none; }
@@ -317,6 +335,18 @@
   <header>
     <h1>내 주식 비서</h1>
     <div class="sub" id="sub"></div>
+    <!-- 정적 페이지라 여기서 직접 실행할 수는 없다.
+         (실행하려면 깃허브 토큰이 필요한데, 공개 페이지에 두면 누구나 쓸 수 있음)
+         대신 실행할 수 있는 곳으로 바로 보내준다. -->
+    <div class="acts">
+      <a class="act primary" href="https://t.me/stocknewsalarm_bot" target="_blank" rel="noopener">
+        💬 봇에게 시키기</a>
+      <a class="act" href="https://github.com/jace0522/Stockanalyze/actions/workflows/manual.yml"
+         target="_blank" rel="noopener">⚙️ 직접 실행</a>
+    </div>
+    <div class="actnote">
+      봇에게 <code>/새로고침</code> · <code>/토론 NVDA</code> 라고 보내면 5분 안에 실행돼요
+    </div>
   </header>
 
   <div class="grid">

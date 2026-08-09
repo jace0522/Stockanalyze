@@ -1,0 +1,56 @@
+name: 텔레그램 명령 받기
+
+# 폰에서 봇에게 /새로고침, /토론 NVDA 같은 명령을 보내면 여기서 처리한다.
+# 5분마다 확인하므로 최대 5분 정도 기다리면 실행된다.
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: news-alert-commands
+  cancel-in-progress: false
+
+jobs:
+  commands:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 패키지 설치
+        run: pip install requests
+
+      - name: 명령 확인 및 실행
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python news_alert.py --commands
+
+      - name: 상태 저장
+        continue-on-error: true   # 저장이 실패해도 알림은 이미 나갔으므로 실행 자체를 실패로 보지 않음
+        run: |
+          git config user.name "news-alert-bot"
+          git config user.email "actions@github.com"
+          git add -A state.json feed.json feed.js team.json debates.json 2>/dev/null || true
+          if git diff --staged --quiet; then
+            echo "바뀐 내용 없음 — 저장 건너뜀"
+            exit 0
+          fi
+          git commit -q -m "chore: 명령 처리 $(date -u +%Y-%m-%dT%H:%MZ)"
+          for i in 1 2 3 4 5; do
+            if git pull --rebase --autostash -q origin "$GITHUB_REF_NAME" && git push -q; then
+              echo "상태 저장 완료 (시도 $i회)"
+              exit 0
+            fi
+            echo "다른 실행과 겹쳐 재시도합니다 ($i/5)"
+            sleep $((RANDOM % 8 + 3))
+          done
+          echo "::warning::상태 저장에 실패했습니다. 알림은 정상 발송되었습니다."

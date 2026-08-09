@@ -1,0 +1,79 @@
+name: 직접 실행 (새로고침 · 토론)
+
+# 깃허브 웹에서 Actions 탭 → 이 워크플로 → Run workflow 로 실행한다.
+# 텔레그램 명령과 달리 기다릴 필요 없이 바로 돈다.
+on:
+  workflow_dispatch:
+    inputs:
+      작업:
+        description: "무엇을 할까요"
+        type: choice
+        required: true
+        default: 새로고침
+        options: [새로고침, 토론, 브리핑]
+      종목:
+        description: "토론할 종목 (예: NVDA 또는 NVDA,TSLA) — 토론일 때만 사용"
+        type: string
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: news-alert-manual
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 패키지 설치
+        run: pip install requests
+
+      - name: 실행
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          작업: ${{ inputs.작업 }}
+          종목: ${{ inputs.종목 }}
+        run: |
+          case "$작업" in
+            새로고침) python news_alert.py --refresh ;;
+            브리핑)   python news_alert.py --daily --force ;;
+            토론)
+              if [ -z "$종목" ]; then
+                echo "::error::토론할 종목을 입력해 주세요 (예: NVDA)"
+                exit 1
+              fi
+              # 종목 값은 셸이 해석하지 않도록 인자로만 넘긴다
+              python news_alert.py --debate "$종목"
+              ;;
+          esac
+
+      - name: 상태 저장
+        continue-on-error: true
+        run: |
+          git config user.name "news-alert-bot"
+          git config user.email "actions@github.com"
+          git add -A state.json feed.json feed.js team.json debates.json 2>/dev/null || true
+          if git diff --staged --quiet; then
+            echo "바뀐 내용 없음 — 저장 건너뜀"
+            exit 0
+          fi
+          git commit -q -m "chore: 직접 실행 ($작업) $(date -u +%Y-%m-%dT%H:%MZ)"
+          for i in 1 2 3 4 5; do
+            if git pull --rebase --autostash -q origin "$GITHUB_REF_NAME" && git push -q; then
+              echo "상태 저장 완료 (시도 $i회)"
+              exit 0
+            fi
+            sleep $((RANDOM % 8 + 3))
+          done
+          echo "::warning::상태 저장에 실패했습니다. 알림은 정상 발송되었습니다."
