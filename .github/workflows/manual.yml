@@ -2,16 +2,19 @@ name: 직접 실행 (새로고침 · 토론)
 
 # 깃허브 웹에서 Actions 탭 → 이 워크플로 → Run workflow 로 실행한다.
 # 텔레그램 명령과 달리 기다릴 필요 없이 바로 돈다.
+# 주의: 입력 id 와 env 이름은 영문만 쓸 수 있다.
+# 한글로 쓰면 워크플로 파일 자체가 유효하지 않아 실행 전에 실패한다.
+# 화면에 보이는 글(description/options)은 한글이어도 괜찮다.
 on:
   workflow_dispatch:
     inputs:
-      작업:
+      action:
         description: "무엇을 할까요"
         type: choice
         required: true
         default: 새로고침
         options: [새로고침, 토론, 브리핑]
-      종목:
+      ticker:
         description: "토론할 종목 (예: NVDA 또는 NVDA,TSLA) — 토론일 때만 사용"
         type: string
         required: false
@@ -27,6 +30,9 @@ concurrency:
 jobs:
   run:
     runs-on: ubuntu-latest
+    env:                        # 커밋 메시지에서도 써야 해서 job 전체에 둔다
+      ACTION: ${{ inputs.action }}
+      TICKER: ${{ inputs.ticker }}
     steps:
       - uses: actions/checkout@v4
 
@@ -42,19 +48,17 @@ jobs:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          작업: ${{ inputs.작업 }}
-          종목: ${{ inputs.종목 }}
         run: |
-          case "$작업" in
+          case "$ACTION" in
             새로고침) python news_alert.py --refresh ;;
             브리핑)   python news_alert.py --daily --force ;;
             토론)
-              if [ -z "$종목" ]; then
+              if [ -z "$TICKER" ]; then
                 echo "::error::토론할 종목을 입력해 주세요 (예: NVDA)"
                 exit 1
               fi
-              # 종목 값은 셸이 해석하지 않도록 인자로만 넘긴다
-              python news_alert.py --debate "$종목"
+              # 입력값은 셸이 해석하지 않도록 따옴표로 감싸 인자로만 넘긴다
+              python news_alert.py --debate "$TICKER"
               ;;
           esac
 
@@ -68,7 +72,7 @@ jobs:
             echo "바뀐 내용 없음 — 저장 건너뜀"
             exit 0
           fi
-          git commit -q -m "chore: 직접 실행 ($작업) $(date -u +%Y-%m-%dT%H:%MZ)"
+          git commit -q -m "chore: 직접 실행 (${ACTION:-?}) $(date -u +%Y-%m-%dT%H:%MZ)"
           for i in 1 2 3 4 5; do
             if git pull --rebase --autostash -q origin "$GITHUB_REF_NAME" && git push -q; then
               echo "상태 저장 완료 (시도 $i회)"
