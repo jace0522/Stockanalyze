@@ -1174,6 +1174,18 @@ def run_commands(config, state):
         save_state(state)
         return False
 
+    # 같은 명령이 여러 번 쌓여 있어도 한 번만 실행한다.
+    # (오타로 다시 보내거나 답이 없어 또 보내는 일이 잦은데, 브리핑은
+    #  1~2분에 API 비용까지 드므로 그대로 두면 그만큼 중복 청구된다)
+    uniq, seen = [], set()
+    for item in cmds:
+        if item in seen:
+            log(f"  같은 명령이 중복돼 건너뜁니다: {item[0]}")
+            continue
+        seen.add(item)
+        uniq.append(item)
+    cmds = uniq
+
     did_work = False
     for cmd, arg in cmds:
         log(f"명령 수신: {cmd} {arg}".strip())
