@@ -105,9 +105,26 @@
   .bars { display:grid; gap:9px; margin-bottom:14px; }
   .bar { display:grid; grid-template-columns:52px 1fr 30px; align-items:center; gap:10px; font-size:12px; }
   .bar .bl { color:var(--t4); }
-  .bar .bt { height:6px; border-radius:99px; background:var(--fill); overflow:hidden; }
-  .bar .bf { height:100%; border-radius:99px; background:var(--blue); transition:width .7s cubic-bezier(.2,.8,.2,1); }
+  /* 트랙 가운데(50점)에 옅은 눈금을 둬서 평균보다 위인지 아래인지 바로 보이게 */
+  .bar .bt {
+    position:relative; height:7px; border-radius:99px;
+    background:var(--fill); overflow:hidden;
+  }
+  .bar .bt::after {
+    content:""; position:absolute; left:50%; top:0; bottom:0; width:1px;
+    background:rgba(255,255,255,.14);
+  }
+  /* display:block 필수 — span 은 inline 이라 width/height 가 먹지 않는다 */
+  .bar .bf {
+    display:block; position:relative; height:100%; width:0; border-radius:99px;
+    background:var(--blue); transition:width .8s cubic-bezier(.2,.8,.2,1);
+  }
+  .bar .bf.hi { background:linear-gradient(90deg,#FF7A8A,var(--up)); }
+  .bar .bf.lo { background:linear-gradient(90deg,#7FB4FF,var(--down)); }
   .bar .bv { text-align:right; color:var(--t2); font-weight:600; }
+  .bar.hi .bv { color:var(--up); }
+  .bar.lo .bv { color:var(--down); }
+  @media (prefers-reduced-motion:reduce) { .bar .bf { transition:none; } }
   .says { display:grid; gap:8px; }
   .sayrow { display:flex; gap:9px; font-size:13px; line-height:1.55; color:var(--t3); }
   .sayrow em { flex:0 0 auto; font-style:normal; }
@@ -431,10 +448,13 @@ const PRICE = {};
     det.innerHTML = `
       ${t['총평'] ? `<div class="dsum">${esc(t['총평'])}</div>` : ''}
       <div class="bars">
-        ${[['뉴스',sc['뉴스']],['차트',sc['기술']],['실적',sc['재무']],['관심도',sc['민심']]].map(([k,v])=>`
-          <div class="bar"><span class="bl">${k}</span>
-            <span class="bt"><span class="bf" data-w="${v}" style="width:0"></span></span>
-            <span class="bv num">${v}</span></div>`).join('')}
+        ${[['뉴스',sc['뉴스']],['차트',sc['기술']],['실적',sc['재무']],['관심도',sc['민심']]].map(([k,v])=>{
+          const n = Number(v), ok = Number.isFinite(n);
+          const tone = !ok ? '' : n >= 65 ? 'hi' : n <= 40 ? 'lo' : '';
+          return `<div class="bar ${tone}"><span class="bl">${k}</span>
+            <span class="bt"><span class="bf ${tone}" data-w="${ok ? Math.max(0, Math.min(100, n)) : 0}"></span></span>
+            <span class="bv num">${ok ? n : '-'}</span></div>`;
+        }).join('')}
       </div>
       <div class="says">
         <div class="sayrow"><em>🦊</em><span>${esc(t['타로']||'-')}
@@ -448,8 +468,11 @@ const PRICE = {};
         <div class="fnum">손절 ${z.stop} · 최대 손실 ${won(z.risk/10000)}만원</div></div>` : ''}`;
     row.onclick = () => {
       const open = det.classList.toggle('open');
-      if (open) det.querySelectorAll('.bf').forEach(b =>
-        setTimeout(() => b.style.width = b.dataset.w + '%', 30));
+      // 닫을 때 0으로 되돌려, 다시 열면 항상 처음부터 차오른다
+      det.querySelectorAll('.bf').forEach((b, j) => {
+        if (!open) { b.style.width = '0'; return; }
+        setTimeout(() => b.style.width = b.dataset.w + '%', 40 + j * 70);
+      });
     };
     box.append(row, det);
   });
