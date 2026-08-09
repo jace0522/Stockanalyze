@@ -35,6 +35,7 @@ FEED_PATH = os.path.join(BASE_DIR, "feed.json")
 FEED_JS_PATH = os.path.join(BASE_DIR, "feed.js")
 TEAM_PATH = os.path.join(BASE_DIR, "team.json")
 DEBATE_PATH = os.path.join(BASE_DIR, "debates.json")
+STOCKS_PATH = os.path.join(BASE_DIR, "stocks.json")
 
 TOSS_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36",
@@ -52,6 +53,25 @@ def log(msg):
             f.write(line + "\n")
     except OSError:
         pass
+
+
+MAX_STOCKS = 30      # 종목이 늘수록 실행 시간과 API 비용이 비례해 늘어난다
+
+
+def load_stocks():
+    """감시 종목 목록 (내 PC와 클라우드가 공유하는 단일 목록)"""
+    if os.path.exists(STOCKS_PATH):
+        try:
+            with open(STOCKS_PATH, encoding="utf-8") as f:
+                return [str(t) for t in (json.load(f).get("종목") or [])]
+        except (json.JSONDecodeError, OSError, AttributeError):
+            log("stocks.json 을 읽지 못했습니다 — config 의 목록을 씁니다")
+    return None
+
+
+def save_stocks(tickers):
+    with open(STOCKS_PATH, "w", encoding="utf-8") as f:
+        json.dump({"종목": tickers}, f, ensure_ascii=False, indent=1)
 
 
 def load_config():
@@ -74,7 +94,14 @@ def load_config():
         v = os.environ.get(env_key)
         if v:
             cfg[cfg_key] = v
-    # 종목/설정도 환경변수로 덮어쓸 수 있게 (선택)
+    # 감시 종목은 stocks.json 하나로 관리한다.
+    # config.json 은 gitignore 라 클라우드에 없고, config.json.example 은
+    # 저장소에 있어서 예전에는 종목을 두 군데에 똑같이 적어야 했다.
+    # stocks.json 은 저장소에 올라가므로 내 PC와 클라우드가 같은 목록을 본다.
+    stocks = load_stocks()
+    if stocks:
+        cfg["종목"] = stocks
+    # 환경변수가 있으면 그게 최우선 (임시로 다른 목록을 쓰고 싶을 때)
     if os.environ.get("STOCKS"):
         cfg["종목"] = [s.strip() for s in os.environ["STOCKS"].split(",") if s.strip()]
 
@@ -1070,10 +1097,15 @@ HELP_TEXT = (
     "🤖 <b>이렇게 시켜보세요</b>\n\n"
     "<code>/새로고침</code>  최신 시세로 대시보드 갱신\n"
     "<code>/토론 NVDA</code>  그 종목을 불리 vs 베어가 토론\n"
-    "<code>/토론 NVDA,TSLA</code>  여러 개는 쉼표로\n"
-    "<code>/브리핑</code>  지금 바로 아침 브리핑 받기\n"
-    "<code>/도움말</code>  이 안내 다시 보기\n\n"
-    "명령을 보내면 최대 5분 안에 실행돼요."
+    "<code>/브리핑</code>  지금 바로 아침 브리핑 받기\n\n"
+    "<b>감시 종목 바꾸기</b>\n"
+    "<code>/종목</code>  지금 보고 있는 종목 목록\n"
+    "<code>/종목추가 PLTR</code>  새 종목 넣기\n"
+    "<code>/종목삭제 PLTR</code>  빼기\n"
+    "  · 미국은 티커(PLTR), 한국은 6자리 코드(005930)\n"
+    "  · 여러 개는 쉼표로: <code>/종목추가 PLTR,AMD</code>\n\n"
+    "<code>/도움말</code>  이 안내 다시 보기\n"
+    "슬래시나 띄어쓰기는 틀려도 알아들어요."
 )
 
 
@@ -1083,6 +1115,9 @@ COMMAND_ALIASES = {
     "토론": "토론", "debate": "토론",
     "브리핑": "브리핑", "briefing": "브리핑", "리포트": "브리핑",
     "도움말": "도움말", "help": "도움말", "start": "도움말", "명령어": "도움말",
+    "종목": "종목", "목록": "종목", "list": "종목",
+    "종목추가": "종목추가", "추가": "종목추가", "add": "종목추가",
+    "종목삭제": "종목삭제", "삭제": "종목삭제", "빼기": "종목삭제", "remove": "종목삭제",
 }
 
 
@@ -1213,6 +1248,60 @@ def run_commands(config, state):
                 continue
             send_telegram(config, f"🥊 <b>{esc(', '.join(tickers))}</b> 토론을 시작할게요. 20초쯤 걸려요.")
             run_debates(config, load_team(), load_feed(), tickers=tickers)
+            did_work = True
+
+        elif cmd == "종목":
+            cur = [str(t) for t in config.get("종목", [])]
+            lines = [f"· {esc(state['names'].get(t, t))} ({esc(t)})" for t in cur]
+            send_telegram(config, f"📋 <b>감시 중인 종목 {len(cur)}개</b>\n"
+                          + "\n".join(lines)
+                          + "\n\n추가: <code>/종목추가 PLTR</code>")
+
+        elif cmd in ("종목추가", "종목삭제"):
+            wanted, _ = parse_tickers(arg, config)
+            if not wanted:
+                send_telegram(config, "종목을 알려주세요. 예) <code>/종목추가 PLTR</code>\n"
+                                      "미국은 티커, 한국은 6자리 숫자예요.")
+                continue
+            cur = [str(t) for t in config.get("종목", [])]
+            if cmd == "종목추가":
+                added, skipped, bad = [], [], []
+                for t in wanted:
+                    if t in cur:
+                        skipped.append(t)
+                        continue
+                    if len(cur) + len(added) >= MAX_STOCKS:
+                        bad.append(f"{t}(개수 한도 {MAX_STOCKS})")
+                        continue
+                    try:   # 실제로 있는 종목인지 토스에서 확인하고 넣는다
+                        _, name, _, _ = lookup_stock(t)
+                        added.append(t)
+                        state["names"][t] = name
+                    except (requests.RequestException, KeyError, TypeError, ValueError):
+                        bad.append(f"{t}(못 찾음)")
+                cur += added
+                msg = []
+                if added:
+                    msg.append("➕ 추가: " + esc(", ".join(
+                        f"{state['names'].get(t, t)}({t})" for t in added)))
+                    msg.append("다음 확인부터 분석해요. 기존 뉴스는 건너뛰니 알림 폭탄은 없어요.")
+                if skipped:
+                    msg.append("이미 보고 있어요: " + esc(", ".join(skipped)))
+                if bad:
+                    msg.append("⚠ 넣지 못함: " + esc(", ".join(bad)))
+                if added:
+                    save_stocks(cur)
+                send_telegram(config, "\n".join(msg))
+            else:
+                gone = [t for t in wanted if t in cur]
+                cur = [t for t in cur if t not in wanted]
+                if gone:
+                    save_stocks(cur)
+                    send_telegram(config, "➖ 뺐어요: " + esc(", ".join(gone))
+                                  + f"\n남은 종목 {len(cur)}개")
+                else:
+                    send_telegram(config, "그 종목은 목록에 없어요: " + esc(", ".join(wanted)))
+            config["종목"] = cur
             did_work = True
 
         elif cmd == "브리핑":

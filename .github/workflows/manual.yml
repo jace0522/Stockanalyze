@@ -67,7 +67,7 @@ jobs:
         run: |
           git config user.name "news-alert-bot"
           git config user.email "actions@github.com"
-          git add -A state.json feed.json feed.js team.json debates.json 2>/dev/null || true
+          git add -A state.json feed.json feed.js team.json debates.json stocks.json 2>/dev/null || true
           if git diff --staged --quiet; then
             echo "바뀐 내용 없음 — 저장 건너뜀"
             exit 0
