@@ -66,6 +66,22 @@
     background:none; border:0; font-family:inherit; padding:2px 0; }
 
 
+  /* 시장 풍향계 — 개별 종목을 보기 전에 전체 분위기부터 */
+  .macro { display:flex; gap:8px; overflow-x:auto; padding:2px; scrollbar-width:none; }
+  .macro::-webkit-scrollbar { display:none; }
+  .macro .m {
+    flex:0 0 auto; min-width:98px; padding:11px 13px; border-radius:12px;
+    background:var(--card); box-shadow:0 0 0 1px var(--fill) inset;
+  }
+  .macro .mk { font-size:11.5px; color:var(--t4); }
+  .macro .mv { font-size:15px; font-weight:700; color:var(--t1); margin-top:3px;
+    font-variant-numeric:tabular-nums; }
+  .macro .mc { font-size:11.5px; margin-top:2px; font-variant-numeric:tabular-nums; }
+  .macro .m.vix { min-width:132px; }
+  .macro .mood { font-size:11.5px; font-weight:700; margin-top:2px; }
+  .mood.잠잠함 { color:var(--green); } .mood.보통 { color:var(--t3); }
+  .mood.불안 { color:var(--amber); }  .mood.공포 { color:var(--up); }
+
   /* 요약 타일 */
   .tiles { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
   .tile { padding:16px 12px; text-align:center; }
@@ -125,6 +141,41 @@
   .bar.hi .bv { color:var(--up); }
   .bar.lo .bv { color:var(--down); }
   @media (prefers-reduced-motion:reduce) { .bar .bf { transition:none; } }
+  /* 5각형 능력치 + 1년 변동폭 */
+  .extra { display:grid; grid-template-columns:132px 1fr; gap:14px; align-items:center;
+    margin:14px 0; padding:13px; border-radius:12px; background:var(--card-2); }
+  .extra.solo { grid-template-columns:1fr; }
+  .radar { width:132px; height:132px; display:block; }
+  .radar .web { fill:none; stroke:rgba(255,255,255,.10); stroke-width:1; }
+  .radar .axis { stroke:rgba(255,255,255,.10); stroke-width:1; }
+  .radar .area { fill:rgba(52,133,250,.26); stroke:var(--blue); stroke-width:1.6;
+    stroke-linejoin:round; }
+  .radar .dot { fill:var(--blue); }
+  .radar text { fill:var(--t4); font-size:9px; font-family:inherit; }
+  .radar text.on { fill:var(--t2); }
+  .rlist { display:grid; gap:5px; font-size:12px; }
+  .rlist div { display:flex; justify-content:space-between; gap:8px; }
+  .rlist .rk { color:var(--t4); }
+  .rlist .rv { color:var(--t2); font-weight:600; font-variant-numeric:tabular-nums; }
+  .rlist .rv.na { color:var(--t4); font-weight:400; }
+
+  .mcbox { margin:14px 0; padding:13px; border-radius:12px; background:var(--card-2); }
+  .mchead { display:flex; justify-content:space-between; align-items:baseline;
+    font-size:12px; color:var(--t4); margin-bottom:10px; }
+  .mchead b { color:var(--t2); font-size:12.5px; }
+  .mcbar { position:relative; height:8px; border-radius:99px; margin:16px 0 6px;
+    background:linear-gradient(90deg,
+      rgba(67,145,255,.22), rgba(67,145,255,.5), rgba(245,68,90,.5), rgba(245,68,90,.22)); }
+  .mcbar .mid { position:absolute; top:-5px; bottom:-5px; width:2px; border-radius:2px;
+    background:var(--t1); left:50%; transform:translateX(-50%); }
+  .mcbar .mid::after { content:"지금"; position:absolute; top:-15px; left:50%;
+    transform:translateX(-50%); font-size:9.5px; color:var(--t3); white-space:nowrap; }
+  .mcends { display:flex; justify-content:space-between; font-size:11.5px;
+    font-variant-numeric:tabular-nums; }
+  .mcends .lo { color:var(--down); } .mcends .hi { color:var(--up); }
+  .mcnote { font-size:11px; color:var(--t4); margin-top:8px; line-height:1.55; }
+  .mcnote.warn { color:var(--amber); }
+
   .says { display:grid; gap:8px; }
   .sayrow { display:flex; gap:9px; font-size:13px; line-height:1.55; color:var(--t3); }
   .sayrow em { flex:0 0 auto; font-style:normal; }
@@ -272,6 +323,11 @@
   <div class="col">
 
 
+  <section id="macroSec" hidden>
+    <div class="sec-head"><h2>시장 분위기</h2><span class="hint">개별 종목보다 먼저</span></div>
+    <div class="macro" id="macro"></div>
+  </section>
+
   <section>
     <div class="sec-head"><h2>오늘 한눈에</h2><span class="hint" id="tileHint"></span></div>
     <div class="tiles" id="tiles"></div>
@@ -339,6 +395,11 @@
         <b>가파르게 올랐어요</b><span>짧은 기간에 급하게 올라 숨 고르기가 올 수 있는 상태</span>
         <b>버는 돈 대비 주가</b><span>회사가 1년에 버는 돈의 몇 배 가격에 거래되는지. 낮으면 싼 편</span>
         <b>적정 수량</b><span>"한 번에 계좌의 1%만 잃도록" 계산한 수량. 많이 흔들리는 종목일수록 적게 나와요</span>
+        <b>공포지수</b><span>미국 시장이 앞으로 얼마나 흔들릴지 보는 값(VIX). 20을 넘으면 불안, 30을 넘으면 공포로 봐요</span>
+        <b>능력치 5각형</b><span>싼지·잘 버는지·크는지·흐름이 좋은지·덜 흔들리는지 다섯 가지. <u>넓을수록 좋지만 모양이 더 중요</u>해요</span>
+        <b>연 변동성</b><span>1년 동안 값이 위아래로 흔들린 정도. 20%면 얌전한 편, 60%가 넘으면 아주 사나운 편</span>
+        <b>1년 뒤 범위</b><span>과거 흔들림으로 1만 번 굴려본 결과. <u>맞히려는 게 아니라 각오할 폭</u>을 보는 거예요</span>
+        <b>레버리지 ETF</b><span>SOXL처럼 배수로 움직이는 상품. 매일 배수를 다시 맞춰서, 오르내림이 반복되면 지수가 제자리여도 손실이 남아요</span>
         <b>손절</b><span>여기까지 떨어지면 정리하기로 미리 정해둔 가격</span>
         <b>고점 대비 낙폭</b><span>내 계좌가 가장 많았을 때보다 지금 얼마나 줄었는지</span>
         <b>적중 / 빗나감</b><span>"좋은 뉴스"라고 본 다음 날 진짜 올랐는지 채점한 결과</span>
@@ -393,6 +454,96 @@ const perWord = per => {
   const n = parseFloat(String(per||'').replace(/[^\d.]/g,''));
   return !n ? '' : n < 15 ? '싼 편' : n < 25 ? '보통' : n < 40 ? '비싼 편' : '많이 비쌈';
 };
+
+/* ── 시장 풍향계 ── */
+(function(){
+  const list = META.macro || [];
+  if (!list.length) return;
+  const fmt = (code, v) =>
+    code === 'FX_USDKRW' ? Math.round(v).toLocaleString('ko-KR') + '원'
+    : code === '.VIX'    ? v.toFixed(1)
+    : v.toLocaleString('ko-KR', { maximumFractionDigits:2 });
+  document.getElementById('macroSec').hidden = false;
+  document.getElementById('macro').innerHTML = list.map(m => {
+    const c = m.change;
+    const chg = c == null ? '' :
+      `<div class="mc ${cls(c)}">${c > 0 ? '▲' : c < 0 ? '▼' : ''}${Math.abs(c).toFixed(2)}%</div>`;
+    /* 공포지수는 숫자만 보면 감이 안 오니 말로도 붙여준다 */
+    const mood = m.mood ? `<div class="mood ${m.mood}">${m.mood}</div>` : '';
+    return `<div class="m ${m.code === '.VIX' ? 'vix' : ''}">
+      <div class="mk">${esc(m.label)}</div>
+      <div class="mv">${fmt(m.code, m.value)}</div>
+      ${m.mood ? mood : chg}</div>`;
+  }).join('');
+})();
+
+/* ── 5각형 능력치 ── */
+const RADAR_AXES = ['가치','수익성','성장성','모멘텀','안정성'];
+const RADAR_HELP = {
+  가치:'싼지 비싼지', 수익성:'돈을 잘 버는지', 성장성:'매출이 크는지',
+  모멘텀:'주가 흐름이 좋은지', 안정성:'덜 흔들리는지'
+};
+function radarSVG(r) {
+  const S = 132, C = S / 2, R = 44;
+  const pt = (i, frac) => {
+    const a = -Math.PI / 2 + i * 2 * Math.PI / 5;   // 12시 방향부터 시계방향
+    return [C + Math.cos(a) * R * frac, C + Math.sin(a) * R * frac];
+  };
+  const poly = f => RADAR_AXES.map((_, i) => pt(i, f).map(n => n.toFixed(1)).join(',')).join(' ');
+  /* 값이 없는 축은 0으로 그리되, 라벨을 흐리게 해서 '없음'을 구분한다 */
+  const shape = RADAR_AXES.map((k, i) =>
+    pt(i, (r[k] ?? 0) / 100).map(n => n.toFixed(1)).join(',')).join(' ');
+  const web = [1, .75, .5, .25].map(f => `<polygon class="web" points="${poly(f)}"/>`).join('');
+  const axes = RADAR_AXES.map((_, i) => {
+    const [x, y] = pt(i, 1);
+    return `<line class="axis" x1="${C}" y1="${C}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}"/>`;
+  }).join('');
+  const labels = RADAR_AXES.map((k, i) => {
+    const [x, y] = pt(i, 1.32);
+    return `<text class="${r[k] == null ? '' : 'on'}" x="${x.toFixed(1)}" y="${(y + 3).toFixed(1)}"
+      text-anchor="middle">${k}</text>`;
+  }).join('');
+  const dots = RADAR_AXES.map((k, i) => {
+    if (r[k] == null) return '';
+    const [x, y] = pt(i, r[k] / 100);
+    return `<circle class="dot" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2"/>`;
+  }).join('');
+  return `<svg class="radar" viewBox="0 0 ${S} ${S}" aria-hidden="true">
+    ${web}${axes}<polygon class="area" points="${shape}"/>${dots}${labels}</svg>`;
+}
+function radarBlock(r) {
+  /* 지수 ETF는 기업이 아니라 바구니라서 매출·이익 같은 게 없다 */
+  if (!r) return `<div class="extra solo"><div class="mcnote">
+    여러 종목을 담은 ETF라 기업 재무 지표(매출·이익)가 없어서 능력치는 건너뛰어요.</div></div>`;
+  const rows = RADAR_AXES.map(k => `<div><span class="rk">${k} <i style="font-style:normal;opacity:.6">${RADAR_HELP[k]}</i></span>
+    <span class="rv ${r[k] == null ? 'na' : ''}">${r[k] == null ? '자료 없음' : r[k] + '점'}</span></div>`).join('');
+  return `<div class="extra">${radarSVG(r)}<div class="rlist">${rows}</div></div>`;
+}
+
+/* ── 1년 뒤 변동폭 (몬테카를로) ── */
+function mcBlock(tk, mc) {
+  if (!mc) return '';
+  /* 레버리지 ETF는 매일 배수를 다시 맞추는 구조라 1년 뒤 값을 이 방식으로
+     계산하면 말이 안 되는 숫자가 나온다. 숫자를 감추고 이유를 알려준다. */
+  if (mc.unreliable) return `<div class="mcbox">
+    <div class="mchead"><b>1년 뒤 어디까지 움직일까</b><span>연 변동성 ${mc.vol}%</span></div>
+    <div class="mcnote warn">흔들림이 워낙 커서(연 ${mc.vol}%) 범위를 계산해도 의미가 없어 생략했어요.
+      레버리지 ETF는 <b>매일</b> 배수를 다시 맞추기 때문에, 오르내림이 반복되면
+      지수가 제자리로 와도 이 상품은 손실이 남아요. 오래 들고 가는 상품이 아니에요.</div></div>`;
+  const pc = v => Math.round((v / mc.now - 1) * 100);
+  return `<div class="mcbox">
+    <div class="mchead"><b>1년 뒤 어디까지 움직일까</b><span>연 변동성 ${mc.vol}%</span></div>
+    <div class="mcbar"><span class="mid"></span></div>
+    <div class="mcends">
+      <span class="lo">${price(tk, mc.p5)} (${pc(mc.p5)}%)</span>
+      <span class="hi">${price(tk, mc.p95)} (+${pc(mc.p95)}%)</span>
+    </div>
+    <div class="mcnote${mc.caution ? ' warn' : ''}">
+      ${mc.caution ? '⚠ 변동성이 너무 커서 이 계산은 참고만 하세요. ' : ''}
+      과거 1년 등락폭으로 1만 번 굴려본 결과, 열 번 중 아홉 번은 이 사이에 있었어요.
+      <b>가격 예측이 아니라 흔들리는 폭</b>을 보는 것이라 가운데는 지금 가격이에요.
+    </div></div>`;
+}
 
 /* ── 헤더 ── */
 (function(){
@@ -456,6 +607,8 @@ const PRICE = {};
             <span class="bv num">${ok ? n : '-'}</span></div>`;
         }).join('')}
       </div>
+      ${radarBlock(t.radar)}
+      ${mcBlock(t.ticker, t.mc)}
       <div class="says">
         <div class="sayrow"><em>🦊</em><span>${esc(t['타로']||'-')}
           <div class="fnum">${rsiWord(tech.rsi)} · 한 달 ${sign(tech.chg20 ?? 0)}% · 1년 중 ${tech.pos52 ?? '-'}% 지점</div></span></div>

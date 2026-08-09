@@ -18,6 +18,7 @@
 import json
 import math
 import os
+import random
 import re
 import sys
 import time
@@ -127,8 +128,8 @@ def load_debates():
     return []
 
 
-def save_feed(feed, stocks, team=None, debates=None):
-    """대시보드(대시보드.html)가 읽는 feed.json + team.json + feed.js 저장"""
+def save_feed(feed, stocks, team=None, debates=None, macro=None):
+    """대시보드(index.html)가 읽는 feed.json + team.json + feed.js 저장"""
     feed = feed[:300]
     if team is None:  # 시세만 갱신할 때는 기존 진단 유지
         team = load_team()
@@ -143,6 +144,7 @@ def save_feed(feed, stocks, team=None, debates=None):
     meta = {
         "updated": datetime.now().strftime("%Y-%m-%d %H:%M"),
         "stocks": stocks,
+        "macro": macro if macro is not None else load_state().get("macro", []),
     }
     with open(FEED_JS_PATH, "w", encoding="utf-8") as f:
         f.write("window.FEED_META = " + json.dumps(meta, ensure_ascii=False) + ";\n")
@@ -163,8 +165,12 @@ def refresh_prices(config, state):
         close, chg = prices.get(state["codes"][t]["page"], (None, None))
         stocks.append({"ticker": t, "name": state["names"].get(t, t),
                        "price": close, "change": chg})
-    save_feed(load_feed(), stocks)
-    log(f"시세 갱신 완료 — {len(stocks)}종목")
+    macro = fetch_macro()          # 풍향계도 같이 갱신 (6번 호출, 1초 남짓)
+    if macro:
+        state["macro"] = macro
+        save_state(state)
+    save_feed(load_feed(), stocks, macro=macro or None)
+    log(f"시세 갱신 완료 — {len(stocks)}종목, 풍향계 {len(macro)}개")
     return prices
 
 
@@ -415,6 +421,203 @@ def compute_tech(closes):
             "spark": [round(c, 2) for c in closes[-30:]]}
 
 
+# ---------------- 시장 풍향계 (매크로) ----------------
+
+# 개별 종목을 보기 전에 "오늘 시장 분위기"를 먼저 알려주는 지표들.
+# (지수코드, 화면이름, 엔드포인트 종류)
+MACRO_SPECS = [
+    (".VIX",  "공포지수", "us"),
+    (".IXIC", "나스닥",   "us"),
+    (".DJI",  "다우",     "us"),
+    ("KOSPI", "코스피",   "kr"),
+    ("KOSDAQ", "코스닥",  "kr"),
+    ("FX_USDKRW", "원달러", "fx"),
+]
+
+
+def vix_mood(v):
+    """VIX 수치 → 쉬운 말. 통상 20을 넘으면 시장이 불안하다고 본다."""
+    if v is None:
+        return None
+    if v < 15:
+        return "잠잠함"
+    if v < 20:
+        return "보통"
+    if v < 30:
+        return "불안"
+    return "공포"
+
+
+def fetch_macro():
+    """VIX·주요 지수·환율 → 대시보드/브리핑용 리스트. 실패한 항목은 건너뛴다."""
+    out = []
+    for code, label, kind in MACRO_SPECS:
+        try:
+            if kind == "us":
+                url = f"https://api.stock.naver.com/index/{code}/basic"
+                d = requests.get(url, headers=NAVER_HEADERS, timeout=10).json()
+            elif kind == "kr":
+                url = f"https://m.stock.naver.com/api/index/{code}/basic"
+                d = requests.get(url, headers=NAVER_HEADERS, timeout=10).json()
+            else:
+                url = f"https://api.stock.naver.com/marketindex/exchange/{code}"
+                d = requests.get(url, headers=NAVER_HEADERS, timeout=10).json()
+                d = d.get("exchangeInfo", {})
+            val = _num(d.get("closePrice"))
+            chg = _num(d.get("fluctuationsRatio"))
+            if val is None:
+                continue
+            item = {"code": code, "label": label, "value": val, "change": chg}
+            if code == ".VIX":
+                item["mood"] = vix_mood(val)
+            out.append(item)
+        except (requests.RequestException, ValueError, KeyError, AttributeError) as e:
+            log(f"[매크로] {label} 조회 실패: {type(e).__name__}")
+    return out
+
+
+# ---------------- 몬테카를로 (1년 뒤 범위) ----------------
+
+def monte_carlo(closes, days=252, runs=10000):
+    """과거 변동성으로 1년 뒤 주가 분포를 추정.
+
+    수익률 '예측'이 아니라 변동폭 감각을 잡기 위한 것이라 추세(드리프트)는
+    0으로 둔다. 과거 1년 수익률을 그대로 미래 기대수익률로 쓰면, 크게 오른
+    종목일수록 미래도 더 오른다고 가정하는 꼴이라 결과가 심하게 왜곡된다.
+    """
+    if len(closes) < 60:
+        return None
+    rets = [math.log(b / a) for a, b in zip(closes[:-1], closes[1:]) if a > 0 and b > 0]
+    if len(rets) < 60:
+        return None
+    mean = sum(rets) / len(rets)
+    var = sum((r - mean) ** 2 for r in rets) / (len(rets) - 1)
+    sd = math.sqrt(var)
+    if sd <= 0:
+        return None
+    s0 = closes[-1]
+    # 로그 드리프트도 0 → 중앙값이 정확히 '오늘 가격'이 된다.
+    # 기대수익률을 0으로 두는 정석(마팅게일)은 중앙값이 현재가보다 아래로
+    # 내려가는데, 그걸 '보통 시나리오'로 읽으면 하락 전망으로 오해한다.
+    # 여기서 보여줄 것은 방향이 아니라 폭이므로 현재가를 가운데에 둔다.
+    shock = sd * math.sqrt(days)
+    rng = random.Random(20260101)          # 매 실행 같은 결과가 나오도록 고정
+    ends = sorted(s0 * math.exp(shock * rng.gauss(0, 1)) for _ in range(runs))
+
+    def pct(p):
+        return round(ends[min(len(ends) - 1, int(len(ends) * p))], 2)
+
+    vol = round(sd * math.sqrt(252) * 100, 1)
+    return {"p5": pct(.05), "p25": pct(.25), "p50": pct(.50),
+            "p75": pct(.75), "p95": pct(.95),
+            "vol": vol, "now": round(s0, 2),
+            # 변동성이 커질수록 정규분포 가정이 어긋난다.
+            #  60% 이상 → 숫자는 보여주되 경고
+            # 100% 이상 → 레버리지 ETF 영역. 매일 배수를 다시 맞추는 구조라
+            #             1년 뒤 가격이 경로에 좌우돼(변동성 끌림) 이 모델이
+            #             아예 성립하지 않는다. 숫자를 감추고 이유만 설명한다.
+            "caution": vol >= 60, "unreliable": vol >= 100}
+
+
+# ---------------- 5각형 능력치 ----------------
+
+def _period_done(title):
+    """'2026.06.30' / '2026.12.' → 그 회계연도가 이미 끝났는지.
+    아직 안 끝난 기간은 증권사 추정치라 실적으로 쓰지 않는다."""
+    m = re.match(r"(\d{4})\.(\d{2})", title or "")
+    if not m:
+        return False
+    y, mo = int(m.group(1)), int(m.group(2))
+    now = datetime.now()
+    return (y, mo) < (now.year, now.month)
+
+
+def fetch_financials(state, ticker):
+    """네이버 연간 재무 → {매출성장률, ROE/ROA, 순이익률, 부채비율}. 없으면 None."""
+    code = naver_code(state, ticker)
+    if not code:
+        return None
+    if ticker.isdigit():
+        url = f"https://m.stock.naver.com/api/stock/{code}/finance/annual"
+        d = requests.get(url, headers=NAVER_HEADERS, timeout=15).json().get("financeInfo") or {}
+    else:
+        url = f"https://api.stock.naver.com/stock/{code}/finance/annual"
+        d = requests.get(url, headers=NAVER_HEADERS, timeout=15).json()
+    rows = {r.get("title"): r.get("columns") or {} for r in d.get("rowList") or []}
+    if not rows:
+        return None
+    periods = [t.get("title") for t in d.get("trTitleList") or []]
+    done = sorted(p for p in periods if _period_done(p))
+    if not done:
+        return None
+
+    def val(name, period):
+        col = rows.get(name, {})
+        # 컬럼 키는 '2026.06.30' 또는 '202612' 처럼 형식이 달라 둘 다 시도
+        cell = col.get(period) or col.get(re.sub(r"\D", "", period)[:6]) or {}
+        return _num(cell.get("value"))
+
+    latest = done[-1]
+    out = {"기준": latest}
+    sales_now = val("매출액", latest)
+    if len(done) >= 2 and sales_now:
+        prev = val("매출액", done[-2])
+        if prev and prev > 0:
+            out["매출성장률"] = round((sales_now / prev - 1) * 100, 1)
+    out["ROE"] = val("ROE", latest)
+    out["ROA"] = val("ROA", latest)
+    out["부채비율"] = val("부채비율", latest)
+    margin = val("순이익률", latest)
+    if margin is None:
+        net = val("당기순이익", latest)
+        if net is not None and sales_now:
+            margin = round(net / sales_now * 100, 1)
+    out["순이익률"] = margin
+    return out if any(v is not None for k, v in out.items() if k != "기준") else None
+
+
+def _band(x, lo, hi):
+    """x 를 lo(=0점) ~ hi(=100점) 구간에 선형으로 놓고 0~100 으로 자른다."""
+    if x is None:
+        return None
+    return max(0.0, min(100.0, (x - lo) / (hi - lo) * 100))
+
+
+def _avg(vals):
+    vals = [v for v in vals if v is not None]
+    return round(sum(vals) / len(vals)) if vals else None
+
+
+def compute_radar(row):
+    """가치·수익성·성장성·모멘텀·안정성 5각형 (각 0~100). 자료 없는 축은 None."""
+    fund = row.get("fund") or {}
+    fin = row.get("fin") or {}
+    tech = row.get("tech") or {}
+    mc = row.get("mc") or {}
+
+    per, pbr = _num(fund.get("per")), _num(fund.get("pbr"))
+    가치 = _avg([_band(per, 45, 8) if per and per > 0 else None,
+               _band(pbr, 7.0, 0.8) if pbr and pbr > 0 else None])
+
+    수익성 = _avg([_band(fin.get("ROE"), 0, 25),
+                _band(fin.get("ROA"), 0, 20),
+                _band(fin.get("순이익률"), 0, 25)])
+
+    성장성 = _band(fin.get("매출성장률"), -20, 20)
+    성장성 = round(성장성) if 성장성 is not None else None
+
+    모멘텀 = None
+    if tech.get("pos52") is not None:
+        모멘텀 = round(0.6 * tech["pos52"] + 0.4 * (_band(tech.get("chg20"), -20, 20) or 50))
+
+    안정성 = _avg([_band(mc.get("vol"), 65, 15),          # 변동성 낮을수록 고득점
+                _band(fin.get("부채비율"), 230, 30)])     # 빚 적을수록 고득점
+
+    r = {"가치": 가치, "수익성": 수익성, "성장성": 성장성,
+         "모멘텀": 모멘텀, "안정성": 안정성}
+    return r if sum(v is not None for v in r.values()) >= 3 else None
+
+
 def naver_code(state, ticker):
     """티커 → 네이버 reutersCode (state에 캐시). 한국 종목은 숫자코드 그대로."""
     if ticker.isdigit():
@@ -649,11 +852,21 @@ def analyze_team(config, rows):
 
 
 def _num(s):
-    """'40.84배', '0.66%' 같은 문자열에서 숫자 추출"""
+    """'40.84배', '0.66%', '-1.65' 같은 값에서 숫자 추출.
+
+    음수 부호를 반드시 살려야 한다 — 등락률·성장률·적자 종목의 ROE는
+    마이너스가 정상이고, 부호를 잃으면 하락을 상승으로 읽는다.
+    자릿수 없는 '-'(자료 없음)나 '.'는 None 으로 떨어진다.
+    """
     if s is None:
         return None
-    m = re.search(r"[\d.]+", str(s).replace(",", ""))
-    return float(m.group(0)) if m else None
+    m = re.search(r"-?\d[\d.]*", str(s).replace(",", ""))
+    if not m:
+        return None
+    try:
+        return float(m.group(0))
+    except ValueError:
+        return None
 
 
 def score_row(row, feed, cutoff):
@@ -718,6 +931,7 @@ def build_team(config, state, feed=None):
             dates, closes, highs, lows, fx = fetch_candles(page)
             candle_map[ticker] = (dates, closes)
             row["tech"] = compute_tech(closes)
+            row["mc"] = monte_carlo(closes)
             atr = compute_atr(closes, highs, lows)
             row["atr"] = atr
             # 계좌금액이 원화이므로 가격·ATR을 원화로 환산해 수량 계산
@@ -735,12 +949,18 @@ def build_team(config, state, feed=None):
             log(f"[{ticker}] 재무 조회 실패: {e}")
             row["fund"] = None
         try:
+            row["fin"] = fetch_financials(state, ticker)
+        except (requests.RequestException, KeyError, ValueError) as e:
+            log(f"[{ticker}] 연간 재무 조회 실패: {e}")
+            row["fin"] = None
+        try:
             row["heat"] = fetch_community_heat(state, ticker)
         except (requests.RequestException, KeyError, ValueError) as e:
             log(f"[{ticker}] 커뮤니티 조회 실패: {e}")
             row["heat"] = None
         row["rank"] = ranks.get(page)
         row["민심"] = vibe_verdict(row["heat"])
+        row["radar"] = compute_radar(row)
         row["점수"] = score_row(row, feed, cutoff)
         # 신호는 종합 점수에서 자동 결정 (65↑ 강세, 40↓ 약세)
         total = row["점수"]["종합"]
@@ -978,6 +1198,8 @@ def run_cycle(config, state):
                            "price": close, "change": chg})
     except (requests.RequestException, KeyError) as e:
         log(f"시세 조회 실패(대시보드에만 영향): {e}")
+    macro = fetch_macro()
+    state["macro"] = macro
     log("타로·디아나·바이브 종목 진단 시작")
     team, candle_map = build_team(config, state, feed)
     graded = grade_feed(feed, candle_map)
@@ -985,10 +1207,10 @@ def run_cycle(config, state):
         log(f"과거 판정 {len(graded)}건 채점 완료")
     debates = run_debates(config, team, feed)
     save_state(state)
-    save_feed(feed, stocks, team, debates)
+    save_feed(feed, stocks, team, debates, macro)
     return {"sent": total, "new_items": new_items, "stocks": stocks,
             "team": team, "feed": feed, "candle_map": candle_map,
-            "graded": graded, "debates": debates}
+            "graded": graded, "debates": debates, "macro": macro}
 
 
 def hit_stats(feed, days=30):
@@ -1026,6 +1248,31 @@ def build_briefing(state, result, earnings):
     P = []
 
     P.append(f"🌅 <b>아침 브리핑</b>   {now.month}/{now.day}({WD[now.weekday()]})")
+
+    # ── 0. 시장 풍향계 (개별 종목보다 먼저 전체 분위기) ──
+    macro = {m["code"]: m for m in (result.get("macro") or [])}
+    if macro:
+        def mv(code, fmt="{:,.0f}"):
+            m = macro.get(code)
+            if not m:
+                return None
+            c = m.get("change")
+            return f"{fmt.format(m['value'])}({c:+.1f}%)" if c is not None else fmt.format(m["value"])
+        vix = macro.get(".VIX")
+        line = []
+        if vix:
+            face = {"잠잠함": "😌", "보통": "🙂", "불안": "😟", "공포": "😱"}.get(vix.get("mood"), "")
+            line.append(f"{face} 공포지수 {vix['value']:.1f} <b>{vix.get('mood','')}</b>")
+        idx = [f"{lbl} {mv(c, '{:,.0f}')}" for c, lbl in
+               ((".IXIC", "나스닥"), ("KOSPI", "코스피")) if mv(c)]
+        fx = mv("FX_USDKRW", "{:,.0f}원")
+        if idx:
+            line.append(" · ".join(idx))
+        if fx:
+            line.append(f"환율 {fx}")
+        if line:
+            P.append("\n<b>🌡 시장 분위기</b>")
+            P.append("\n".join(line))
 
     # ── 1. 밤사이 시장 ──
     movers = [s for s in result["stocks"] if s.get("change") is not None]
