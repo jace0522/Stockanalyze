@@ -1557,5 +1557,6 @@
  "earnings": {
   "_fetched": "2026-08-04"
  },
- "earnings_alerted": {}
+ "earnings_alerted": {},
+ "last_weekly": "2026-08-09"
 }
