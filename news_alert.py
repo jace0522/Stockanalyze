@@ -1077,6 +1077,38 @@ HELP_TEXT = (
 )
 
 
+# 명령 이름 → 대표 이름. 슬래시가 없어도, 영어로 써도 알아듣는다.
+COMMAND_ALIASES = {
+    "새로고침": "새로고침", "갱신": "새로고침", "refresh": "새로고침",
+    "토론": "토론", "debate": "토론",
+    "브리핑": "브리핑", "briefing": "브리핑", "리포트": "브리핑",
+    "도움말": "도움말", "help": "도움말", "start": "도움말", "명령어": "도움말",
+}
+
+
+def normalize_command(text):
+    """사용자가 보낸 말 → (명령, 인자). 명령이 아니면 None.
+
+    '/브리핑', '/ 브리핑'(슬래시 뒤 띄어쓰기), '브리핑'(슬래시 없음),
+    '/토론@내봇 NVDA' 를 모두 같은 것으로 본다. 폰에서 치다 보면
+    띄어쓰기가 끼거나 슬래시를 빠뜨리기 쉬워서 너그럽게 받는다.
+    """
+    t = (text or "").strip()
+    if not t:
+        return None
+    if t.startswith("/"):
+        t = t[1:].lstrip()          # '/ 브리핑' 도 통과
+    parts = t.split(maxsplit=1)
+    if not parts:
+        return None
+    head = parts[0].split("@")[0].lower()   # 그룹에서 쓰는 '/토론@봇이름' 대응
+    cmd = COMMAND_ALIASES.get(head)
+    if not cmd:
+        # 슬래시로 시작했다면 오타로 보고 안내를 띄운다
+        return ("?", t) if (text or "").strip().startswith("/") else None
+    return (cmd, parts[1] if len(parts) > 1 else "")
+
+
 def fetch_commands(config, state):
     """봇에게 온 새 메시지에서 명령만 골라낸다.
 
@@ -1104,8 +1136,11 @@ def fetch_commands(config, state):
         if chat_id != my_chat:
             log(f"  다른 사람({chat_id})의 메시지는 무시합니다")
             continue
-        if text.startswith("/"):
-            cmds.append(text)
+        norm = normalize_command(text)
+        if norm:
+            cmds.append(norm)
+        elif text:
+            log(f"  명령이 아닌 메시지는 건너뜁니다: {text[:30]}")
     if last:
         state["tg_offset"] = last     # 같은 명령을 두 번 실행하지 않도록 표시
     return cmds
@@ -1140,16 +1175,13 @@ def run_commands(config, state):
         return False
 
     did_work = False
-    for text in cmds:
-        parts = text.split(maxsplit=1)
-        cmd = parts[0].lstrip("/").split("@")[0]
-        arg = parts[1] if len(parts) > 1 else ""
-        log(f"명령 수신: {text}")
+    for cmd, arg in cmds:
+        log(f"명령 수신: {cmd} {arg}".strip())
 
-        if cmd in ("도움말", "help", "start"):
+        if cmd == "도움말":
             send_telegram(config, HELP_TEXT)
 
-        elif cmd in ("새로고침", "refresh"):
+        elif cmd == "새로고침":
             refresh_prices(config, state)
             m = {x["code"]: x for x in state.get("macro", [])}
             vix = m.get(".VIX")
@@ -1157,7 +1189,7 @@ def run_commands(config, state):
             send_telegram(config, "🔄 <b>대시보드를 갱신했어요</b>" + extra)
             did_work = True
 
-        elif cmd in ("토론", "debate"):
+        elif cmd == "토론":
             tickers, unknown = parse_tickers(arg, config)
             if not tickers:
                 send_telegram(config, "종목을 알려주세요. 예) <code>/토론 NVDA</code>")
@@ -1171,13 +1203,13 @@ def run_commands(config, state):
             run_debates(config, load_team(), load_feed(), tickers=tickers)
             did_work = True
 
-        elif cmd in ("브리핑", "briefing"):
+        elif cmd == "브리핑":
             send_telegram(config, "🌅 브리핑을 만들고 있어요. 1~2분 걸려요.")
             daily_run(config, state, force=True)
             did_work = True
 
         else:
-            send_telegram(config, f"모르는 명령이에요: {esc(text)}\n\n" + HELP_TEXT)
+            send_telegram(config, f"모르는 명령이에요: {esc(arg)}\n\n" + HELP_TEXT)
 
     save_state(state)
     return did_work
