@@ -1762,21 +1762,21 @@
   {
    "code": "KOSPI",
    "label": "코스피",
-   "value": 6258.77,
-   "change": -0.6
+   "value": 6289.22,
+   "change": 0.49
   },
   {
    "code": "KOSDAQ",
    "label": "코스닥",
-   "value": 798.81,
-   "change": -0.36
+   "value": 846.23,
+   "change": 5.94
   },
   {
    "code": "FX_USDKRW",
    "label": "원달러",
-   "value": 1412.0,
-   "change": -0.88
+   "value": 1415.4,
+   "change": 0.31
   }
  ],
- "tg_offset": 975795670
+ "tg_offset": 975795671
 }
