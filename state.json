@@ -2503,6 +2503,10 @@
   "GOOGL": {
    "date": "2026-08-02",
    "level": 1
+  },
+  "NFLX": {
+   "date": "2026-08-13",
+   "level": 1
   }
  },
  "earnings": {
@@ -2514,21 +2518,21 @@
   {
    "code": ".VIX",
    "label": "공포지수",
-   "value": 14.68,
-   "change": 0.89,
+   "value": 14.74,
+   "change": 1.31,
    "mood": "잠잠함"
   },
   {
    "code": ".IXIC",
    "label": "나스닥",
-   "value": 26785.25,
-   "change": 0.74
+   "value": 26831.86,
+   "change": 0.92
   },
   {
    "code": ".DJI",
    "label": "다우",
-   "value": 53756.8,
-   "change": -0.03
+   "value": 53838.64,
+   "change": 0.13
   },
   {
    "code": "KOSPI",
@@ -2545,8 +2549,8 @@
   {
    "code": "FX_USDKRW",
    "label": "원달러",
-   "value": 1420.1,
-   "change": 0.08
+   "value": 1419.5,
+   "change": 0.04
   }
  ],
  "tg_offset": 975795672
