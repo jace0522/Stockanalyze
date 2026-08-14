@@ -750,9 +750,14 @@ def _debate_brief(row, feed, cutoff):
     if fin:
         lines.append(f"실적: 매출성장 {fin.get('매출성장률','-')}%, ROE {fin.get('ROE','-')}, "
                      f"순이익률 {fin.get('순이익률','-')}%, 부채비율 {fin.get('부채비율','-')}%")
-    if mc:
-        lines.append(f"위험: 연 변동성 {mc.get('vol')}%, 1년 뒤 흔히 {mc.get('p5')}~{mc.get('p95')} 범위"
-                     + (" (변동성 과대 — 이 추정은 신뢰도 낮음)" if mc.get("caution") else ""))
+    if mc and mc.get("now"):
+        # 절대 가격만 주면 '1.2배~4배' 처럼 배수로 오해한다. 현재가 대비 %를 함께 준다.
+        now = mc["now"]
+        lo = round((mc["p5"] / now - 1) * 100)
+        hi = round((mc["p95"] / now - 1) * 100)
+        lines.append(f"위험: 연 변동성 {mc.get('vol')}%. 현재가 {now} 기준 1년 뒤 열에 아홉은 "
+                     f"{mc['p5']}({lo}%) ~ {mc['p95']}(+{hi}%) 사이"
+                     + (" (변동성이 너무 커서 이 추정은 신뢰도 낮음)" if mc.get("caution") else ""))
     if size.get("qty"):
         lines.append(f"권장 규모: {size['qty']}주 (계좌의 {size.get('weight')}%), "
                      f"손절가 {size.get('stop')}")
