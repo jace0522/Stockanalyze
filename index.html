@@ -159,6 +159,19 @@
   .bar.hi .bv { color:var(--up); }
   .bar.lo .bv { color:var(--down); }
   @media (prefers-reduced-motion:reduce) { .bar .bf { transition:none; } }
+  /* 싼가 비싼가 */
+  .valbox { margin:12px 0; padding:12px 13px; border-radius:12px; background:var(--card-2); }
+  .valhead { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+  .vtag { font-size:12.5px; font-weight:700; padding:4px 10px; border-radius:7px; }
+  .vtag.저평가 { color:#fff; background:var(--green); }
+  .vtag.적정   { color:var(--t3); background:var(--fill); }
+  .vtag.고평가 { color:#fff; background:var(--up); }
+  .vsub { font-size:11.5px; color:var(--t4); }
+  .vwhy { font-size:12px; color:var(--t3); line-height:1.66; }
+  .vconf { font-size:11px; color:var(--amber); margin-top:7px; }
+  .vnote { font-size:11px; color:var(--t4); margin-top:5px; }
+  .vnote b { color:var(--t3); }
+
   /* 5각형 능력치 + 1년 변동폭 */
   .extra { display:grid; grid-template-columns:132px 1fr; gap:14px; align-items:center;
     margin:14px 0; padding:13px; border-radius:12px; background:var(--card-2); }
@@ -489,6 +502,8 @@
         <b>1차 / 2차</b><span>한 번에 다 사거나 팔지 않고 나눠서 하는 지점. 1차에 절반, 더 움직이면 2차에 나머지</span>
         <b>먹을 것이 잃을 것의 2배</b><span>손절까지 10% 잡았으면 목표는 20%로 두는 방식. <u>목표를 먼저 정하고 손절을 끼워 맞추면 안 돼요</u></span>
         <b>52주 최고를 넘어야</b><span>목표가가 지난 1년 중 가장 비쌌던 값보다 높다는 뜻. 한 번도 못 가본 값이라 그만큼 어려워요</span>
+        <b>저평가 / 고평가</b><span>두 가지로 재요. ① <u>얼마나 빨리 크는지에 비해</u> 지금 값이 싼가 ② <u>이 회사가 예전에 받던 값</u>보다 지금이 싼가. 업종이 달라도 비교되도록 이렇게 봐요</span>
+        <b>두 잣대가 엇갈려요</b><span>성장 대비로는 싼데 과거 대비로는 비싸다(또는 반대)는 뜻. 한 숫자로 뭉개면 위험하니 둘 다 보세요</span>
       </div>
     </details>
   </section>
@@ -680,10 +695,18 @@ const PRICE = {};
         <div class="c num ${cls(p.change)}">${p.change != null ? sign(p.change)+'%' : ''}</div>
       </div>
       <div class="badge ${sig}"><span class="cu" data-to="${sc['종합']}">0</span></div>`;
+    const val = t.val;
     const det = document.createElement('div');
     det.className = 'detail';
     det.innerHTML = `
       ${t['총평'] ? `<div class="dsum">${esc(t['총평'])}</div>` : ''}
+      ${val ? `<div class="valbox">
+        <div class="valhead"><span class="vtag ${val['판정']}">${val['판정']}</span>
+          <span class="vsub">싼지 비싼지 ${val['점수']}점</span></div>
+        <div class="vwhy">${val['근거'].map(w => `<div>· ${esc(w)}</div>`).join('')}</div>
+        ${val['상충'] ? `<div class="vconf">두 잣대가 서로 엇갈려요. 한쪽만 보고 판단하지 마세요.</div>` : ''}
+        ${val['peg'] ? `<div class="vnote">성장은 <b>매출</b> 기준이에요. 이익 기준보다 후하게 나오니 참고만 하세요.</div>` : ''}
+      </div>` : ''}
       <div class="bars">
         ${[['뉴스',sc['뉴스']],['차트',sc['기술']],['실적',sc['재무']],['관심도',sc['민심']]].map(([k,v])=>{
           const n = Number(v), ok = Number.isFinite(n);
@@ -903,6 +926,12 @@ Stage.start();
   function levelBlock(d) {
     const lv = d.levels;
     if (!lv) return '';
+    /* 판단은 그 시점의 스냅샷이다. 가격만 나중에 갱신하면 AI가 쓴 설명문의
+       숫자와 표가 어긋나므로, 표는 판단 당시 값으로 고정하고
+       지금 시세가 많이 움직였으면 그 사실을 알려준다. */
+    const now = (PRICE[d.ticker] || {}).price;
+    const drift = now && lv['지금가'] ? (now / lv['지금가'] - 1) * 100 : 0;
+    const stale = Math.abs(drift) >= 3;
     const f = v => v == null ? '-'
       : lv.krw ? Math.round(v).toLocaleString('ko-KR') + '원'
                : '$' + v.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
@@ -913,11 +942,14 @@ Stage.start();
          <span class="la">${f(a)} ${pct(a)}</span>
          <span class="lb">${b == null ? '' : f(b) + ' ' + pct(b)}</span></div>`;
     return `<div class="levels">
-      <div class="lv head"><span class="lk">지금 ${f(lv['지금가'])}</span>
+      <div class="lv head"><span class="lk">판단 당시 ${f(lv['지금가'])}</span>
         <span class="la">1차</span><span class="lb">2차</span></div>
       ${row('사기', 'buy', lv['매수1'], lv['매수2'])}
       ${row('팔기', 'sell', lv['목표1'], lv['목표2'])}
       ${row('손절', 'stop', lv['손절가'], null)}
+      ${stale ? `<div class="lvwarn">판단한 ${esc(d.at || '')} 이후 주가가
+        ${drift > 0 ? '+' : ''}${drift.toFixed(1)}% 움직여 지금은 ${f(now)}예요.
+        가격대를 다시 뽑으려면 <b>/판단 ${esc(d.ticker)}</b> 를 보내세요.</div>` : ''}
       ${levelNotes(lv, f)}
       <div class="lvnote">먹을 것이 잃을 것의 <b>${lv['손익비']}배</b>가 되도록 잡은 값이에요.
         ${d['가격근거'] ? esc(d['가격근거']) : ''}</div>

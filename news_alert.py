@@ -602,6 +602,9 @@ def fetch_financials(state, ticker):
 
     latest = done[-1]
     out = {"기준": latest}
+    # 과거 PER — '지금이 이 회사치고 싼 편인가'를 재는 잣대
+    out["per_hist"] = {p: v for p in done
+                       if (v := val("PER", p)) and v > 0}
     sales_now = val("매출액", latest)
     if len(done) >= 2 and sales_now:
         prev = val("매출액", done[-2])
@@ -715,6 +718,57 @@ def _ask(config, prompt, max_tokens=900):
         return None
 
 
+def valuation(row):
+    """지금 주가가 이 회사치고 싼가 비싼가 (0~100, 높을수록 쌈).
+
+    두 잣대를 쓴다. 절대적인 PER 숫자만 보면 업종별로 기준이 달라
+    "성장주는 무조건 비싸다"는 잘못된 결론이 나오기 때문이다.
+
+      ① 성장 대비 (PEG) — 버는 돈 대비 주가 ÷ 매출 성장률
+         빨리 크는 회사는 비싸 보여도 쌀 수 있다. 1보다 작으면 싼 편.
+      ② 자기 이력 대비 — 지금 PER 이 과거 몇 년 평균보다 낮은가
+         같은 회사끼리 비교하는 것이라 업종 차이를 자동으로 걷어낸다.
+    """
+    fund, fin = row.get("fund") or {}, row.get("fin") or {}
+    per = _num(fund.get("per"))
+    if not per or per <= 0:
+        return None
+    parts, why = [], []
+
+    growth = fin.get("매출성장률")
+    peg = None
+    if growth and growth > 0:
+        peg = round(per / growth, 2)
+        # PEG 0.5 → 100점, 3.0 → 0점
+        parts.append(_band(peg, 3.0, 0.5))
+        why.append(f"매출이 한 해 {growth}% 크는 것에 비하면 "
+                   f"{'싼' if peg < 1 else '보통인' if peg < 2 else '비싼'} 편이에요")
+
+    hist = [v for k, v in (fin.get("per_hist") or {}).items()]
+    per_avg = round(sum(hist) / len(hist), 1) if len(hist) >= 2 else None
+    per_vs = None
+    if per_avg and per_avg > 0:
+        per_vs = round((per / per_avg - 1) * 100)
+        # 과거 평균의 70% → 100점, 150% → 0점
+        parts.append(_band(per / per_avg, 1.5, 0.7))
+        why.append(f"이 회사가 예전에 받던 값({per_avg}배)보다 지금이 {abs(per_vs)}% "
+                   f"{'싸요' if per_vs < 0 else '비싸요'} (지금 {per}배)")
+
+    if not parts:
+        return None
+    score = _avg(parts)
+    verdict = "저평가" if score >= 65 else "고평가" if score <= 35 else "적정"
+    return {
+        "판정": verdict, "점수": score, "per": per, "peg": peg,
+        "per_avg": per_avg, "per_vs": per_vs, "성장률": growth, "근거": why,
+        # 두 잣대가 크게 엇갈리면 평균 한 숫자로 뭉개면 안 된다.
+        # (예: 성장 대비는 싼데 자기 과거보다는 훨씬 비싼 경우)
+        "상충": bool(len(parts) == 2 and abs(parts[0] - parts[1]) >= 45),
+        # 매출 성장률로 계산한 PEG 는 이익 기준보다 후하게 나온다는 점을 표시
+        "peg_기준": "매출" if peg else None,
+    }
+
+
 def price_levels(row, config):
     """목표 매수가·매도가·손절가를 계산한다 (AI가 지어내지 않도록 숫자는 여기서).
 
@@ -826,6 +880,10 @@ def _debate_brief(row, feed, cutoff):
     if fin:
         lines.append(f"실적: 매출성장 {fin.get('매출성장률','-')}%, ROE {fin.get('ROE','-')}, "
                      f"순이익률 {fin.get('순이익률','-')}%, 부채비율 {fin.get('부채비율','-')}%")
+    val = row.get("val")
+    if val:
+        lines.append(f"싼가 비싼가: {val['판정']}({val['점수']}점) — " + " / ".join(val["근거"])
+                     + (" ※ 두 잣대가 엇갈림" if val.get("상충") else ""))
     if mc and mc.get("now"):
         # 절대 가격만 주면 '1.2배~4배' 처럼 배수로 오해한다. 현재가 대비 %를 함께 준다.
         now = mc["now"]
@@ -856,23 +914,35 @@ def run_debate(config, row, feed):
     brief = _debate_brief(row, feed, cutoff)
     name = row["name"]
 
-    PLAIN = ("<말투 규칙> 주식을 처음 배우는 사람도 알아듣게 쉬운 우리말로 써라. "
-             "RSI·PER·PBR·밸류에이션·모멘텀·멀티플·컨센서스 같은 전문용어를 그대로 쓰지 말고 "
-             "뜻을 풀어 쓸 것(예: 'RSI 73' → '최근 너무 가파르게 올라 과열됨', "
-             "'PER 27배' → '버는 돈에 비해 주가가 비쌈'). 숫자는 인용하되 뜻을 한마디로 붙여라.\n")
+    # 이 규칙은 프롬프트 '맨 끝'에 붙인다. 중간에 두면 뒤에 온 지시에 밀려
+    # 실제로 무시됐다(판정문에 RSI·PER·PBR·밸류에이션이 그대로 나왔음).
+    PLAIN = (
+        "\n\n<반드시 지킬 말투 규칙 — 이 규칙이 다른 무엇보다 우선한다>\n"
+        "주식을 처음 배우는 사람에게 말하듯 쉬운 우리말만 쓴다.\n"
+        "다음 단어는 절대 쓰지 말 것: RSI, PER, PBR, ROE, ROA, PEG, 밸류에이션, "
+        "모멘텀, 멀티플, 컨센서스, 포지션, 리스크, 펀더멘털.\n"
+        "대신 이렇게 바꿔 쓴다:\n"
+        "  RSI 75 → '한 달 새 가파르게 올라 숨이 찬 상태'\n"
+        "  PER 34배 → '버는 돈의 34배 가격'\n"
+        "  PBR 28배 → '회사가 가진 재산의 28배 가격'\n"
+        "  ROE 10% → '가진 돈으로 한 해 10% 를 벌어들임'\n"
+        "  밸류에이션이 높다 → '주가가 비싸다'\n"
+        "  모멘텀이 강하다 → '오르는 힘이 세다'\n"
+        "숫자는 그대로 인용하되 반드시 뜻을 한마디로 붙인다.\n")
 
     bull = _ask(config,
         f"너는 주식 애널리스트 '불리'다. 아래 데이터로 {name}이 <b>좋아 보이는 이유</b>를 편다.\n"
         f"규칙: 데이터에 있는 숫자를 근거로 쓸 것. 3개 논점, 각 1~2문장. "
-        f"과장 금지, 없는 사실 지어내지 말 것. 번호 목록으로만 답하라.\n" + PLAIN + f"\n{brief}")
+        f"과장 금지, 없는 사실 지어내지 말 것. 번호 목록으로만 답하라.\n"
+        f"\n{brief}" + PLAIN)
     if not bull:
         return None
 
     bear = _ask(config,
         f"너는 주식 애널리스트 '베어'다. 아래는 {name}에 대한 낙관론자의 주장이다.\n"
         f"<b>각 논점을 구체적으로 반박</b>하라. 일반론이 아니라 상대가 든 근거의 약점을 짚을 것.\n"
-        f"3개 반박, 각 1~2문장. 번호 목록으로만 답하라.\n" + PLAIN +
-        f"\n[데이터]\n{brief}\n\n[낙관론자 주장]\n{bull}")
+        f"3개 반박, 각 1~2문장. 번호 목록으로만 답하라.\n"
+        f"\n[데이터]\n{brief}\n\n[낙관론자 주장]\n{bull}" + PLAIN)
     if not bear:
         return None
 
@@ -883,7 +953,8 @@ def run_debate(config, row, feed):
         f"다음 3가지를 각 1문장으로 짚어라. 번호 목록으로만 답하라.\n"
         f"1) 이 종목이 얼마나 흔들리는지, 최악의 경우 얼마나 잃을 수 있는지\n"
         f"2) 지금 들어가면 계좌에서 어느 정도 비중이 적당한지\n"
-        f"3) 판단이 틀렸다고 인정하고 나와야 하는 지점\n" + PLAIN + f"\n{brief}",
+        f"3) 판단이 틀렸다고 인정하고 나와야 하는 지점\n"
+        f"\n{brief}" + PLAIN,
         max_tokens=500)
 
     judge = _ask(config,
@@ -898,8 +969,9 @@ def run_debate(config, row, feed):
         f'"가격근거":"제시한 가격대를 그렇게 본 이유 한 문장(참고선과 엮어서)",'
         f'"지켜볼것":"관전 포인트 한 문장(40자 이내)"}}\n'
         f"<가격 규칙> 가격은 [데이터]의 '계산된 가격대'에 있는 숫자를 그대로 쓴다. "
-        f"직접 계산하거나 새 숫자를 만들지 마라. 가격근거에서만 참고선을 언급하라.\n" + PLAIN + "\n"
-        f"[데이터]\n{brief}\n\n[강세]\n{bull}\n\n[약세]\n{bear}\n\n[위험 검토]\n{risk or '없음'}",
+        f"직접 계산하거나 새 숫자를 만들지 마라. 가격근거에서만 참고선을 언급하라.\n\n"
+        f"[데이터]\n{brief}\n\n[강세]\n{bull}\n\n[약세]\n{bear}\n\n[위험 검토]\n{risk or '없음'}"
+        + PLAIN,
         max_tokens=1200)
     if not judge:
         return None
@@ -1174,6 +1246,7 @@ def build_team(config, state, feed=None):
         row["rank"] = ranks.get(page)
         row["민심"] = vibe_verdict(row["heat"])
         row["radar"] = compute_radar(row)
+        row["val"] = valuation(row)
         row["점수"] = score_row(row, feed, cutoff)
         # 신호는 종합 점수에서 자동 결정 (65↑ 강세, 40↓ 약세)
         total = row["점수"]["종합"]
