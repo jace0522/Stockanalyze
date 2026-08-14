@@ -264,6 +264,27 @@
   .pill.강세 { color:var(--up); background:rgba(245,68,90,.13); }
   .pill.약세 { color:var(--down); background:rgba(67,145,255,.13); }
   .issue { font-size:13px; color:var(--t3); background:var(--card-2); border-radius:10px; padding:10px 12px; margin-bottom:12px; line-height:1.55; }
+
+  /* 최종 판단 배지 — 한눈에 들어와야 하므로 알약보다 크고 진하게 */
+  .call { font-size:13px; font-weight:700; padding:5px 12px; border-radius:8px;
+    background:var(--card-2); color:var(--t2); letter-spacing:-.02em; }
+  .call.적극매수 { color:#fff; background:var(--up); }
+  .call.매수    { color:var(--up); background:rgba(245,68,90,.16); }
+  .call.홀드    { color:var(--t3); background:var(--card-2); }
+  .call.매도    { color:var(--down); background:rgba(67,145,255,.16); }
+  .call.적극매도 { color:#fff; background:var(--down); }
+  .oneline { font-size:14px; color:var(--t1); line-height:1.55; margin-bottom:10px; font-weight:600; }
+  .reasons { margin:0 0 12px 17px; padding:0; font-size:13px; color:var(--t3); line-height:1.66; }
+  .reasons li { margin-bottom:3px; }
+  .counter, .invalid { font-size:12.5px; line-height:1.6; border-radius:10px;
+    padding:10px 12px; margin-bottom:8px; color:var(--t3); }
+  .counter { background:rgba(255,176,32,.09); }
+  .counter b { color:var(--amber); display:block; margin-bottom:2px; font-size:11.5px; }
+  .invalid { background:var(--card-2); }
+  .invalid b { color:var(--t2); display:block; margin-bottom:2px; font-size:11.5px; }
+  .side.risk { margin-top:10px; }
+  .side.risk h4 { color:var(--amber); }
+  .deb.fold .side.risk, .deb.fold .counter, .deb.fold .invalid { display:none; }
   .deb-h .caret { margin-left:auto; font-size:12px; color:var(--t4); }
   .deb.fold { cursor:pointer; }
   .deb.fold:hover { background:var(--card-2); }
@@ -433,6 +454,9 @@
         <b>손절</b><span>여기까지 떨어지면 정리하기로 미리 정해둔 가격</span>
         <b>고점 대비 낙폭</b><span>내 계좌가 가장 많았을 때보다 지금 얼마나 줄었는지</span>
         <b>적중 / 빗나감</b><span>"좋은 뉴스"라고 본 다음 날 진짜 올랐는지 채점한 결과</span>
+        <b>종합 판단</b><span>양쪽 주장과 위험까지 따져 <u>적극매수·매수·홀드·매도·적극매도</u> 중 하나로 결론낸 것. 근거가 팽팽하면 홀드예요</span>
+        <b>확신도</b><span>그 판단을 얼마나 믿을 만한지. <u>낮음이면 근거가 약하다는 뜻</u>이니 참고만 하세요</span>
+        <b>이러면 판단이 틀린 것</b><span>이 조건이 생기면 판단을 뒤집어야 한다는 신호. <u>미리 정해두면 손절이 쉬워져요</u></span>
       </div>
     </details>
   </section>
@@ -825,23 +849,31 @@ Stage.start();
   const area = document.getElementById('debArea');
   const fmt = t => esc(t||'').replace(/^#.*$/gm,'').replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')
     .split('\n').map(l=>l.trim()).filter(Boolean).map(l=>`<p>${l}</p>`).join('');
+  /* 판단이 없는 예전 기록은 우세로 대신 표시 */
+  const callOf = d => d['판단'] ||
+    ({ 강세:'매수', 약세:'매도' }[d['우세']] || '홀드');
   DEBATES.forEach((d, i) => {
-    const w = d['우세'] || '팽팽';
+    const call = callOf(d);
     const el = document.createElement('div');
     // 첫 카드만 펼쳐두고 나머지는 접어서 화면을 짧게 유지
     el.className = 'card deb' + (i === 0 ? '' : ' fold');
+    const reasons = (d['핵심근거'] || []).map(r => `<li>${esc(r)}</li>`).join('');
     el.innerHTML = `
       <div class="deb-h"><span class="n">${esc(d.name)}</span>
         ${d.score != null ? `<span class="pill">${d.score}점</span>` : ''}
-        <span class="pill ${w}">${esc(w)} 우세</span>
-        <span class="caret">${i === 0 ? '접기' : '양측 주장 보기'}</span></div>
-      ${d['핵심쟁점'] ? `<div class="issue">쟁점 — ${esc(d['핵심쟁점'])}</div>` : ''}
+        <span class="call ${call}">${esc(call)}</span>
+        ${d['확신도'] ? `<span class="pill">확신 ${esc(d['확신도'])}</span>` : ''}
+        <span class="caret">${i === 0 ? '접기' : '근거 보기'}</span></div>
+      ${d['한줄'] || d['결론'] ? `<div class="oneline">${esc(d['한줄'] || d['결론'])}</div>` : ''}
+      ${reasons ? `<ul class="reasons">${reasons}</ul>` : ''}
+      ${d['반대로볼근거'] ? `<div class="counter"><b>반대 시각</b> ${esc(d['반대로볼근거'])}</div>` : ''}
+      ${d['무효화조건'] ? `<div class="invalid"><b>이러면 판단이 틀린 것</b> ${esc(d['무효화조건'])}</div>` : ''}
       <div class="sides">
         <div class="side bull"><h4>좋게 보는 쪽</h4>${fmt(d.bull)}</div>
         <div class="side bear"><h4>반박</h4>${fmt(d.bear)}</div>
       </div>
-      ${d['결론'] ? `<div class="verdict">${esc(d['결론'])}
-        ${d['지켜볼것'] ? `<span class="w">지켜볼 것 — ${esc(d['지켜볼것'])}</span>` : ''}</div>` : ''}`;
+      ${d.risk ? `<div class="side risk"><h4>위험 점검</h4>${fmt(d.risk)}</div>` : ''}
+      ${d['지켜볼것'] ? `<div class="verdict"><span class="w">지켜볼 것 — ${esc(d['지켜볼것'])}</span></div>` : ''}`;
     el.onclick = () => {
       const folded = el.classList.toggle('fold');
       el.querySelector('.caret').textContent = folded ? '양측 주장 보기' : '접기';

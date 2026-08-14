@@ -156,6 +156,20 @@ def load_debates():
     return []
 
 
+def load_feed_stocks():
+    """feed.js 에 저장돼 있는 시세 목록을 그대로 가져온다.
+    토론만 다시 저장할 때 시세를 날리지 않기 위함."""
+    if os.path.exists(FEED_JS_PATH):
+        try:
+            with open(FEED_JS_PATH, encoding="utf-8") as f:
+                m = re.search(r"window\.FEED_META = (.*?);\n", f.read())
+            if m:
+                return json.loads(m.group(1)).get("stocks", [])
+        except (json.JSONDecodeError, OSError):
+            pass
+    return []
+
+
 def save_feed(feed, stocks, team=None, debates=None, macro=None):
     """대시보드(index.html)가 읽는 feed.json + team.json + feed.js 저장"""
     feed = feed[:300]
@@ -721,19 +735,30 @@ def pick_debate_targets(team, limit=2):
 def _debate_brief(row, feed, cutoff):
     """토론용 종목 데이터 요약 (토큰 절약을 위해 압축)"""
     s, tech, fund = row.get("점수") or {}, row.get("tech") or {}, row.get("fund") or {}
+    mc, size, fin = row.get("mc") or {}, row.get("size") or {}, row.get("fin") or {}
     recent = [n for n in feed if n["ticker"] == row["ticker"]
               and (n.get("createdAt") or "") >= cutoff][:6]
     news = " / ".join(f"[{n['verdict']}]{clip(n['title'], 28)}" for n in recent) or "없음"
-    return (
-        f"종목: {row['name']}({row['ticker']})\n"
+    lines = [
+        f"종목: {row['name']}({row['ticker']})",
         f"점수: 종합 {s.get('종합','?')} (뉴스 {s.get('뉴스','?')} / 기술 {s.get('기술','?')} / "
-        f"재무 {s.get('재무','?')} / 민심 {s.get('민심','?')})\n"
+        f"재무 {s.get('재무','?')} / 민심 {s.get('민심','?')})",
         f"기술: {tech.get('판정','?')}, RSI {tech.get('rsi','?')}, 20일 {tech.get('chg20','?')}%, "
-        f"52주위치 {tech.get('pos52','?')}%\n"
-        f"재무: PER {fund.get('per') or '-'}, PBR {fund.get('pbr') or '-'}, 배당 {fund.get('div') or '-'}\n"
-        f"민심: {row.get('민심','?')} (시간당 댓글 {row.get('heat','?')}개)\n"
-        f"최근 뉴스: {news}"
-    )
+        f"52주위치 {tech.get('pos52','?')}%",
+        f"재무: PER {fund.get('per') or '-'}, PBR {fund.get('pbr') or '-'}, 배당 {fund.get('div') or '-'}",
+    ]
+    if fin:
+        lines.append(f"실적: 매출성장 {fin.get('매출성장률','-')}%, ROE {fin.get('ROE','-')}, "
+                     f"순이익률 {fin.get('순이익률','-')}%, 부채비율 {fin.get('부채비율','-')}%")
+    if mc:
+        lines.append(f"위험: 연 변동성 {mc.get('vol')}%, 1년 뒤 흔히 {mc.get('p5')}~{mc.get('p95')} 범위"
+                     + (" (변동성 과대 — 이 추정은 신뢰도 낮음)" if mc.get("caution") else ""))
+    if size.get("qty"):
+        lines.append(f"권장 규모: {size['qty']}주 (계좌의 {size.get('weight')}%), "
+                     f"손절가 {size.get('stop')}")
+    lines.append(f"민심: {row.get('민심','?')} (시간당 댓글 {row.get('heat','?')}개)")
+    lines.append(f"최근 뉴스: {news}")
+    return "\n".join(lines)
 
 
 def run_debate(config, row, feed):
@@ -762,12 +787,28 @@ def run_debate(config, row, feed):
     if not bear:
         return None
 
+    # 리스크 관리자 — 논문(TradingAgents)의 Risk Management Team 역할.
+    # 방향이 맞아도 크기가 틀리면 계좌가 망가지므로 '얼마나'를 따로 본다.
+    risk = _ask(config,
+        f"너는 리스크 관리자 '가디'다. {name}을 사고파는 게 아니라 <b>얼마나 위험한지</b>만 본다.\n"
+        f"다음 3가지를 각 1문장으로 짚어라. 번호 목록으로만 답하라.\n"
+        f"1) 이 종목이 얼마나 흔들리는지, 최악의 경우 얼마나 잃을 수 있는지\n"
+        f"2) 지금 들어가면 계좌에서 어느 정도 비중이 적당한지\n"
+        f"3) 판단이 틀렸다고 인정하고 나와야 하는 지점\n" + PLAIN + f"\n{brief}",
+        max_tokens=500)
+
     judge = _ask(config,
-        f"너는 리서치 매니저 '부엉'이다. 아래 토론을 심판하라.\n"
-        f'형식(JSON만): {{"우세":"강세|약세|팽팽","핵심쟁점":"양측이 갈린 지점 한 문장(50자 이내)",'
-        f'"결론":"종합 판단 2문장 이내(투자 지시어 금지, 상태 진단으로)",'
-        f'"지켜볼것":"이 논쟁의 승패를 가를 관전 포인트 한 문장(40자 이내)"}}\n' + PLAIN + "\n"
-        f"[데이터]\n{brief}\n\n[강세]\n{bull}\n\n[약세]\n{bear}", max_tokens=600)
+        f"너는 리서치 매니저 '부엉'이다. 아래 토론과 위험 검토를 종합해 <b>결론</b>을 내려라.\n"
+        f"판단은 반드시 다음 중 하나: 적극매수 / 매수 / 홀드 / 매도 / 적극매도\n"
+        f"근거가 약하거나 양쪽이 팽팽하면 억지로 방향을 잡지 말고 '홀드'로 두어라.\n"
+        f'형식(JSON만): {{"판단":"위 5개 중 하나","확신도":"높음|보통|낮음",'
+        f'"우세":"강세|약세|팽팽","한줄":"판단 이유 한 문장(45자 이내)",'
+        f'"핵심근거":["근거1","근거2","근거3"],'
+        f'"반대로볼근거":"이 판단이 틀릴 수 있는 가장 강한 이유 한 문장",'
+        f'"무효화조건":"이런 일이 생기면 판단을 뒤집어야 한다는 구체적 조건 한 문장",'
+        f'"지켜볼것":"관전 포인트 한 문장(40자 이내)"}}\n' + PLAIN + "\n"
+        f"[데이터]\n{brief}\n\n[강세]\n{bull}\n\n[약세]\n{bear}\n\n[위험 검토]\n{risk or '없음'}",
+        max_tokens=1200)
     if not judge:
         return None
 
@@ -779,16 +820,55 @@ def run_debate(config, row, feed):
         except json.JSONDecodeError:
             pass
 
+    call = verdict.get("판단", "")
+    if call not in ("적극매수", "매수", "홀드", "매도", "적극매도"):
+        call = "홀드"        # 형식을 벗어나면 가장 보수적인 쪽으로
+
+    price = None
+    for s in (row.get("tech") or {}).get("spark") or []:
+        price = s            # 판단 시점 가격 — 나중에 맞았는지 채점하려고 남긴다
+
     return {
         "ticker": row["ticker"], "name": name,
         "score": (row.get("점수") or {}).get("종합"),
-        "bull": bull, "bear": bear,
+        "bull": bull, "bear": bear, "risk": risk,
+        "판단": call,
+        "확신도": verdict.get("확신도", "보통"),
         "우세": verdict.get("우세", "팽팽"),
+        "한줄": verdict.get("한줄", ""),
+        "핵심근거": [str(x) for x in (verdict.get("핵심근거") or [])][:3],
+        "반대로볼근거": verdict.get("반대로볼근거", ""),
+        "무효화조건": verdict.get("무효화조건", ""),
         "핵심쟁점": verdict.get("핵심쟁점", ""),
-        "결론": verdict.get("결론", ""),
+        "결론": verdict.get("한줄", ""),      # 예전 대시보드 호환
         "지켜볼것": verdict.get("지켜볼것", ""),
+        "price": price,
         "at": datetime.now().strftime("%Y-%m-%d %H:%M"),
     }
+
+
+CALL_EMOJI = {"적극매수": "🟢🟢", "매수": "🟢", "홀드": "⚪",
+              "매도": "🔴", "적극매도": "🔴🔴"}
+
+
+def format_verdict(d):
+    """토론 결론을 텔레그램 메시지로"""
+    P = [f"🥊 <b>{esc(d['name'])}</b> 종합 판단",
+         f"{CALL_EMOJI.get(d.get('판단'), '⚪')} <b>{esc(d.get('판단', '홀드'))}</b>"
+         f"  ·  확신도 {esc(d.get('확신도', '보통'))}"
+         + (f"  ·  종합 {d['score']}점" if d.get("score") is not None else "")]
+    if d.get("한줄"):
+        P.append(f"\n{esc(d['한줄'])}")
+    for i, r in enumerate(d.get("핵심근거") or [], 1):
+        P.append(f"{i}. {esc(r)}")
+    if d.get("반대로볼근거"):
+        P.append(f"\n⚠️ <b>반대 시각</b>\n{esc(d['반대로볼근거'])}")
+    if d.get("무효화조건"):
+        P.append(f"\n↩︎ <b>이러면 판단이 틀린 것</b>\n{esc(d['무효화조건'])}")
+    if d.get("지켜볼것"):
+        P.append(f"\n👀 {esc(d['지켜볼것'])}")
+    P.append("\n<i>AI 의견이에요.</i>")
+    return "\n".join(P)
 
 
 def run_debates(config, team, feed, tickers=None):
@@ -813,7 +893,7 @@ def run_debates(config, team, feed, tickers=None):
         log(f"🥊 토론 시작: {row['name']} (종합 {(row.get('점수') or {}).get('종합')}점)")
         d = run_debate(config, row, feed)
         if d:
-            log(f"   → {d['우세']} 우세 · {clip(d['핵심쟁점'], 40)}")
+            log(f"   → {d['판단']} (확신 {d['확신도']}) · {clip(d.get('한줄',''), 40)}")
             out.append(d)
         time.sleep(0.5)
     return out
@@ -1112,7 +1192,7 @@ HELP_TEXT = (
 # 명령 이름 → 대표 이름. 슬래시가 없어도, 영어로 써도 알아듣는다.
 COMMAND_ALIASES = {
     "새로고침": "새로고침", "갱신": "새로고침", "refresh": "새로고침",
-    "토론": "토론", "debate": "토론",
+    "토론": "토론", "debate": "토론", "판단": "토론", "분석": "토론",
     "브리핑": "브리핑", "briefing": "브리핑", "리포트": "브리핑",
     "도움말": "도움말", "help": "도움말", "start": "도움말", "명령어": "도움말",
     "종목": "종목", "목록": "종목", "list": "종목",
@@ -1244,10 +1324,15 @@ def run_commands(config, state):
             if unknown:
                 send_telegram(config, "감시 목록에 없는 종목이에요: "
                                       + esc(", ".join(unknown))
-                              + "\n먼저 config의 종목에 추가해 주세요.")
+                              + "\n<code>/종목추가 " + esc(unknown[0]) + "</code> 로 먼저 넣어주세요.")
                 continue
-            send_telegram(config, f"🥊 <b>{esc(', '.join(tickers))}</b> 토론을 시작할게요. 20초쯤 걸려요.")
-            run_debates(config, load_team(), load_feed(), tickers=tickers)
+            send_telegram(config, f"🥊 <b>{esc(', '.join(tickers))}</b> 분석을 시작할게요. 30초쯤 걸려요.")
+            results = run_debates(config, load_team(), load_feed(), tickers=tickers)
+            merged = [d for d in load_debates() if d["ticker"] not in
+                      {r["ticker"] for r in results}]
+            save_feed(load_feed(), load_feed_stocks(), debates=(results + merged)[:8])
+            for d in results:
+                send_telegram(config, format_verdict(d))
             did_work = True
 
         elif cmd == "종목":
@@ -1575,13 +1660,13 @@ def build_briefing(state, result, earnings):
 
     # ── 3.5 오늘의 토론 ──
     for d in (result.get("debates") or [])[:2]:
-        emoji = {"강세": "🟢", "약세": "🔴"}.get(d.get("우세"), "⚖️")
         P.append(f"\n<b>🥊 오늘의 토론 · {esc(d['name'])}</b>")
-        P.append(f"{emoji} <b>{esc(d.get('우세','팽팽'))} 우세</b>")
-        if d.get("핵심쟁점"):
-            P.append(f"쟁점: {esc(clip(d['핵심쟁점'], 42))}")
-        if d.get("결론"):
-            P.append(f"{esc(clip(d['결론'], 60))}")
+        P.append(f"{CALL_EMOJI.get(d.get('판단'), '⚖️')} <b>{esc(d.get('판단','홀드'))}</b>"
+                 f" (확신 {esc(d.get('확신도','보통'))})")
+        if d.get("한줄"):
+            P.append(esc(clip(d["한줄"], 52)))
+        if d.get("무효화조건"):
+            P.append(f"↩︎ 뒤집힐 때: {esc(clip(d['무효화조건'], 46))}")
 
     # ── 4. 실적 발표 (3일 이내만) ──
     from zoneinfo import ZoneInfo
@@ -1798,19 +1883,9 @@ def main():
         if new:
             keep = [d for d in load_debates() if d["ticker"] not in {x["ticker"] for x in new}]
             debates = new + keep
-            stocks = []
-            if os.path.exists(FEED_JS_PATH):
-                m = re.search(r"window\.FEED_META = (.*?);\n",
-                              open(FEED_JS_PATH, encoding="utf-8").read())
-                if m:
-                    stocks = json.loads(m.group(1)).get("stocks", [])
-            save_feed(feed, stocks, team, debates[:8])
+            save_feed(feed, load_feed_stocks(), team, debates[:8])
             for d in new:
-                send_telegram(config, (
-                    f"🥊 <b>{esc(d['name'])} 토론 결과</b>\n"
-                    f"{'🟢' if d['우세']=='강세' else '🔴' if d['우세']=='약세' else '⚖️'} "
-                    f"<b>{esc(d['우세'])} 우세</b>\n"
-                    f"쟁점: {esc(d['핵심쟁점'])}\n{esc(d['결론'])}"))
+                send_telegram(config, format_verdict(d))
             log("대시보드를 새로고침하면 토론 결과가 보여요.")
         return
 
