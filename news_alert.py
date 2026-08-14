@@ -460,6 +460,7 @@ def compute_tech(closes):
     return {"판정": verdict, "rsi": rsi, "ma20": round(ma20, 2),
             "ma60": round(ma60, 2) if ma60 else None,
             "pos52": pos52, "chg20": chg20,
+            "hi52": round(hi, 2), "lo52": round(lo, 2), "price": round(price, 2),
             "spark": [round(c, 2) for c in closes[-30:]]}
 
 
@@ -714,6 +715,55 @@ def _ask(config, prompt, max_tokens=900):
         return None
 
 
+def price_levels(row, config):
+    """목표 매수가·매도가·손절가를 계산한다 (AI가 지어내지 않도록 숫자는 여기서).
+
+    기준은 '손실 폭을 먼저 정하고 목표를 그에 비례해 잡는다'는 원칙.
+      손절가 = 지금가 − ATR × 배수      ← 여기까지 틀리면 인정하고 나온다
+      R      = 지금가 − 손절가          ← 한 번에 감수할 폭
+      목표가 = 지금가 + R × 2 (그리고 ×3)
+    목표를 먼저 정하고 손절을 끼워 맞추면 손익비가 무너지므로 순서를 지킨다.
+    52주 고가·이동평균은 '이 근처에서 걸리기 쉽다'는 참고선으로만 함께 넘긴다.
+    """
+    tech, atr = row.get("tech") or {}, row.get("atr")
+    price = tech.get("price")
+    if not price or not atr or atr <= 0:
+        return None
+    k = float(config.get("손절_ATR배수", 2))
+    stop = price - atr * k
+    if stop <= 0:
+        return None
+    R = price - stop
+    krw = str(row.get("ticker", "")).isdigit()
+    rnd = (lambda v: round(v)) if krw else (lambda v: round(v, 2))
+
+    hi52 = tech.get("hi52")
+    t1 = price + R * 2
+    return {
+        "지금가": rnd(price),
+        "손절가": rnd(stop),
+        "R": rnd(R),
+        # 분할매수: 지금 조금, 눌리면 더 (한 번에 다 담지 않기 위함)
+        "매수1": rnd(price),
+        "매수2": rnd(price - R * 0.5),
+        "목표1": rnd(t1),
+        "목표2": rnd(price + R * 3),
+        "손익비": round((R * 2) / R, 1),          # 1차 목표 기준 = 2.0 고정
+        # 변동성이 큰 종목은 R 이 커서 목표가 52주 최고가를 넘어버린다.
+        # 한 번도 못 가본 값이라는 뜻이므로 그대로 두지 말고 표시해준다.
+        "신고가필요": bool(hi52 and t1 > hi52),
+        "ma20": tech.get("ma20"), "ma60": tech.get("ma60"),
+        "hi52": hi52, "lo52": tech.get("lo52"),
+        "krw": krw,
+    }
+
+
+def _fmt_px(v, krw):
+    if v is None:
+        return "-"
+    return f"{round(v):,}원" if krw else f"${v:,.2f}"
+
+
 def pick_debate_targets(team, limit=2):
     """의견이 갈리는 종목 우선 선정 — 세부점수 편차가 큰 순
     (예: 뉴스 100점인데 기술 28점 → 토론 가치가 높음)"""
@@ -759,8 +809,15 @@ def _debate_brief(row, feed, cutoff):
                      f"{mc['p5']}({lo}%) ~ {mc['p95']}(+{hi}%) 사이"
                      + (" (변동성이 너무 커서 이 추정은 신뢰도 낮음)" if mc.get("caution") else ""))
     if size.get("qty"):
-        lines.append(f"권장 규모: {size['qty']}주 (계좌의 {size.get('weight')}%), "
-                     f"손절가 {size.get('stop')}")
+        lines.append(f"권장 규모: {size['qty']}주 (계좌의 {size.get('weight')}%)")
+    lv = row.get("levels")
+    if lv:
+        lines.append(
+            f"계산된 가격대(이 숫자만 쓸 것): 지금 {lv['지금가']} / "
+            f"1차매수 {lv['매수1']} / 2차매수 {lv['매수2']} / "
+            f"1차목표 {lv['목표1']} / 2차목표 {lv['목표2']} / 손절 {lv['손절가']}\n"
+            f"참고선: 20일평균 {lv.get('ma20')}, 60일평균 {lv.get('ma60')}, "
+            f"52주 최고 {lv.get('hi52')}, 52주 최저 {lv.get('lo52')}")
     lines.append(f"민심: {row.get('민심','?')} (시간당 댓글 {row.get('heat','?')}개)")
     lines.append(f"최근 뉴스: {news}")
     return "\n".join(lines)
@@ -769,6 +826,7 @@ def _debate_brief(row, feed, cutoff):
 def run_debate(config, row, feed):
     """불리(강세) vs 베어(약세) 토론 → 부엉(중재) 결론. Claude 3회 호출."""
     cutoff = (datetime.now() - timedelta(days=5)).strftime("%Y-%m-%d")
+    row = dict(row, levels=price_levels(row, config))
     brief = _debate_brief(row, feed, cutoff)
     name = row["name"]
 
@@ -811,7 +869,10 @@ def run_debate(config, row, feed):
         f'"핵심근거":["근거1","근거2","근거3"],'
         f'"반대로볼근거":"이 판단이 틀릴 수 있는 가장 강한 이유 한 문장",'
         f'"무효화조건":"이런 일이 생기면 판단을 뒤집어야 한다는 구체적 조건 한 문장",'
-        f'"지켜볼것":"관전 포인트 한 문장(40자 이내)"}}\n' + PLAIN + "\n"
+        f'"가격근거":"제시한 가격대를 그렇게 본 이유 한 문장(참고선과 엮어서)",'
+        f'"지켜볼것":"관전 포인트 한 문장(40자 이내)"}}\n'
+        f"<가격 규칙> 가격은 [데이터]의 '계산된 가격대'에 있는 숫자를 그대로 쓴다. "
+        f"직접 계산하거나 새 숫자를 만들지 마라. 가격근거에서만 참고선을 언급하라.\n" + PLAIN + "\n"
         f"[데이터]\n{brief}\n\n[강세]\n{bull}\n\n[약세]\n{bear}\n\n[위험 검토]\n{risk or '없음'}",
         max_tokens=1200)
     if not judge:
@@ -837,6 +898,8 @@ def run_debate(config, row, feed):
         "ticker": row["ticker"], "name": name,
         "score": (row.get("점수") or {}).get("종합"),
         "bull": bull, "bear": bear, "risk": risk,
+        "levels": row.get("levels"),
+        "가격근거": verdict.get("가격근거", ""),
         "판단": call,
         "확신도": verdict.get("확신도", "보통"),
         "우세": verdict.get("우세", "팽팽"),
@@ -866,6 +929,17 @@ def format_verdict(d):
         P.append(f"\n{esc(d['한줄'])}")
     for i, r in enumerate(d.get("핵심근거") or [], 1):
         P.append(f"{i}. {esc(r)}")
+    lv = d.get("levels")
+    if lv:
+        f = lambda v: _fmt_px(v, lv.get("krw"))
+        P.append(f"\n💵 <b>가격대</b>  <i>(지금 {f(lv['지금가'])})</i>")
+        P.append(f"사기: {f(lv['매수1'])} · 더 눌리면 {f(lv['매수2'])}")
+        P.append(f"팔기: {f(lv['목표1'])} · 더 가면 {f(lv['목표2'])}"
+                 + (f"\n  ↑ 52주 최고({f(lv['hi52'])})를 넘어야 닿는 값이에요"
+                    if lv.get("신고가필요") else ""))
+        P.append(f"손절: {f(lv['손절가'])}  <i>(먹을 것이 잃을 것의 {lv['손익비']}배)</i>")
+        if d.get("가격근거"):
+            P.append(f"<i>{esc(d['가격근거'])}</i>")
     if d.get("반대로볼근거"):
         P.append(f"\n⚠️ <b>반대 시각</b>\n{esc(d['반대로볼근거'])}")
     if d.get("무효화조건"):

@@ -276,6 +276,33 @@
   .oneline { font-size:14px; color:var(--t1); line-height:1.55; margin-bottom:10px; font-weight:600; }
   .reasons { margin:0 0 12px 17px; padding:0; font-size:13px; color:var(--t3); line-height:1.66; }
   .reasons li { margin-bottom:3px; }
+  /* 목표 가격대 표 */
+  .levels { background:var(--card-2); border-radius:12px; padding:11px 13px; margin-bottom:10px; }
+  .lv { display:grid; grid-template-columns:40px 1fr 1fr; gap:6px; align-items:baseline;
+    font-size:13px; padding:5px 0; font-variant-numeric:tabular-nums; }
+  /* 원화는 '274,500원'처럼 길어서 좁은 폰에서 잘린다. 등락률을 아랫줄로 내린다 */
+  @media (max-width:430px) {
+    .lv { font-size:12.5px; gap:4px; }
+    .lv i { display:block; margin-top:1px; }
+  }
+  .lv + .lv { border-top:1px solid var(--line); }
+  /* 머리줄의 '지금 274,500원'은 40px 칸에 안 들어가므로 따로 배분 */
+  .lv.head { font-size:11.5px; color:var(--t4); padding-top:0;
+    grid-template-columns:1fr 46px 46px; }
+  .lv.head .lk { font-size:11.5px; }
+  .lv.head .la, .lv.head .lb { color:var(--t4); font-weight:400; text-align:right; }
+  .lv .lk { color:var(--t4); font-size:12px; }
+  .lv .la, .lv .lb { color:var(--t2); font-weight:600; }
+  .lv i { font-style:normal; font-size:11px; color:var(--t4); font-weight:400; }
+  .lv.buy .la, .lv.buy .lb { color:var(--up); }
+  .lv.sell .la, .lv.sell .lb { color:var(--green); }
+  .lv.stop .la { color:var(--down); }
+  .lvwarn { font-size:11px; color:var(--amber); line-height:1.55; margin-top:8px;
+    padding-top:8px; border-top:1px solid var(--line); }
+  .lvnote { font-size:11px; color:var(--t4); line-height:1.55; margin-top:8px;
+    padding-top:8px; border-top:1px solid var(--line); }
+  .lvnote b { color:var(--t3); }
+
   .counter, .invalid { font-size:12.5px; line-height:1.6; border-radius:10px;
     padding:10px 12px; margin-bottom:8px; color:var(--t3); }
   .counter { background:rgba(255,176,32,.09); }
@@ -457,6 +484,9 @@
         <b>종합 판단</b><span>양쪽 주장과 위험까지 따져 <u>적극매수·매수·홀드·매도·적극매도</u> 중 하나로 결론낸 것. 근거가 팽팽하면 홀드예요</span>
         <b>확신도</b><span>그 판단을 얼마나 믿을 만한지. <u>낮음이면 근거가 약하다는 뜻</u>이니 참고만 하세요</span>
         <b>이러면 판단이 틀린 것</b><span>이 조건이 생기면 판단을 뒤집어야 한다는 신호. <u>미리 정해두면 손절이 쉬워져요</u></span>
+        <b>1차 / 2차</b><span>한 번에 다 사거나 팔지 않고 나눠서 하는 지점. 1차에 절반, 더 움직이면 2차에 나머지</span>
+        <b>먹을 것이 잃을 것의 2배</b><span>손절까지 10% 잡았으면 목표는 20%로 두는 방식. <u>목표를 먼저 정하고 손절을 끼워 맞추면 안 돼요</u></span>
+        <b>52주 최고를 넘어야</b><span>목표가가 지난 1년 중 가장 비쌌던 값보다 높다는 뜻. 한 번도 못 가본 값이라 그만큼 어려워요</span>
       </div>
     </details>
   </section>
@@ -849,6 +879,32 @@ Stage.start();
   const area = document.getElementById('debArea');
   const fmt = t => esc(t||'').replace(/^#.*$/gm,'').replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')
     .split('\n').map(l=>l.trim()).filter(Boolean).map(l=>`<p>${l}</p>`).join('');
+  /* 목표 가격대 — 손절을 먼저 정하고 목표를 비례로 잡은 값 */
+  function levelBlock(d) {
+    const lv = d.levels;
+    if (!lv) return '';
+    const f = v => v == null ? '-'
+      : lv.krw ? Math.round(v).toLocaleString('ko-KR') + '원'
+               : '$' + v.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
+    const pct = v => v == null || !lv['지금가'] ? ''
+      : `<i>${v > lv['지금가'] ? '+' : ''}${Math.round((v / lv['지금가'] - 1) * 100)}%</i>`;
+    const row = (k, cls, a, b) =>
+      `<div class="lv ${cls}"><span class="lk">${k}</span>
+         <span class="la">${f(a)} ${pct(a)}</span>
+         <span class="lb">${b == null ? '' : f(b) + ' ' + pct(b)}</span></div>`;
+    return `<div class="levels">
+      <div class="lv head"><span class="lk">지금 ${f(lv['지금가'])}</span>
+        <span class="la">1차</span><span class="lb">2차</span></div>
+      ${row('사기', 'buy', lv['매수1'], lv['매수2'])}
+      ${row('팔기', 'sell', lv['목표1'], lv['목표2'])}
+      ${row('손절', 'stop', lv['손절가'], null)}
+      ${lv['신고가필요'] ? `<div class="lvwarn">1차 목표는 52주 최고(${f(lv['hi52'])})보다 높아요.
+        한 번도 못 가본 값이라 그만큼 어렵다는 뜻이에요.</div>` : ''}
+      <div class="lvnote">먹을 것이 잃을 것의 <b>${lv['손익비']}배</b>가 되도록 잡은 값이에요.
+        ${d['가격근거'] ? esc(d['가격근거']) : ''}</div>
+    </div>`;
+  }
+
   /* 판단이 없는 예전 기록은 우세로 대신 표시 */
   const callOf = d => d['판단'] ||
     ({ 강세:'매수', 약세:'매도' }[d['우세']] || '홀드');
@@ -866,6 +922,7 @@ Stage.start();
         <span class="caret">${i === 0 ? '접기' : '근거 보기'}</span></div>
       ${d['한줄'] || d['결론'] ? `<div class="oneline">${esc(d['한줄'] || d['결론'])}</div>` : ''}
       ${reasons ? `<ul class="reasons">${reasons}</ul>` : ''}
+      ${levelBlock(d)}
       ${d['반대로볼근거'] ? `<div class="counter"><b>반대 시각</b> ${esc(d['반대로볼근거'])}</div>` : ''}
       ${d['무효화조건'] ? `<div class="invalid"><b>이러면 판단이 틀린 것</b> ${esc(d['무효화조건'])}</div>` : ''}
       <div class="sides">
