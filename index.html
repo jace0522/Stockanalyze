@@ -297,8 +297,10 @@
   .lv.buy .la, .lv.buy .lb { color:var(--up); }
   .lv.sell .la, .lv.sell .lb { color:var(--green); }
   .lv.stop .la { color:var(--down); }
-  .lvwarn { font-size:11px; color:var(--amber); line-height:1.55; margin-top:8px;
+  .lvwarn, .lvcalm { font-size:11px; line-height:1.55; margin-top:8px;
     padding-top:8px; border-top:1px solid var(--line); }
+  .lvwarn { color:var(--amber); }
+  .lvcalm { color:var(--t4); }   /* 당연한 상황이라 경고색을 쓰지 않는다 */
   .lvnote { font-size:11px; color:var(--t4); line-height:1.55; margin-top:8px;
     padding-top:8px; border-top:1px solid var(--line); }
   .lvnote b { color:var(--t3); }
@@ -879,6 +881,24 @@ Stage.start();
   const area = document.getElementById('debArea');
   const fmt = t => esc(t||'').replace(/^#.*$/gm,'').replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')
     .split('\n').map(l=>l.trim()).filter(Boolean).map(l=>`<p>${l}</p>`).join('');
+  /* 목표가에 붙는 주의 문구.
+     목표가 52주 최고를 넘는 건 대개 '목표가 커서'가 아니라 '이미 최고가
+     근처라서' 생긴다(15종목 확인: 넘는 쪽 목표 +13%, 안 넘는 쪽 +22%).
+     그래서 고점 부근이면 겁주지 않고 당연한 일이라고 알려준다. */
+  function levelNotes(lv, f) {
+    const out = [];
+    if (lv['신고가필요']) {
+      out.push(lv['고점부근']
+        ? { t:'normal', s:`이미 52주 최고(${f(lv['hi52'])}) 부근이라 목표는 자연히 신고가예요.` }
+        : { t:'warn',   s:`52주 최고(${f(lv['hi52'])})를 넘어야 닿는 값이에요.` });
+    }
+    if (lv['큰폭']) {
+      out.push({ t:'warn', s:`많이 흔들리는 종목이라 목표가 ${lv['목표퍼센트']}%로 크게 잡혔어요.
+        며칠이 아니라 몇 달 볼 값이에요.` });
+    }
+    return out.map(o => `<div class="lv${o.t === 'warn' ? 'warn' : 'calm'}">${o.s}</div>`).join('');
+  }
+
   /* 목표 가격대 — 손절을 먼저 정하고 목표를 비례로 잡은 값 */
   function levelBlock(d) {
     const lv = d.levels;
@@ -898,8 +918,7 @@ Stage.start();
       ${row('사기', 'buy', lv['매수1'], lv['매수2'])}
       ${row('팔기', 'sell', lv['목표1'], lv['목표2'])}
       ${row('손절', 'stop', lv['손절가'], null)}
-      ${lv['신고가필요'] ? `<div class="lvwarn">1차 목표는 52주 최고(${f(lv['hi52'])})보다 높아요.
-        한 번도 못 가본 값이라 그만큼 어렵다는 뜻이에요.</div>` : ''}
+      ${levelNotes(lv, f)}
       <div class="lvnote">먹을 것이 잃을 것의 <b>${lv['손익비']}배</b>가 되도록 잡은 값이에요.
         ${d['가격근거'] ? esc(d['가격근거']) : ''}</div>
     </div>`;

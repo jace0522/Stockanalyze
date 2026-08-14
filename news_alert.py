@@ -749,9 +749,17 @@ def price_levels(row, config):
         "목표1": rnd(t1),
         "목표2": rnd(price + R * 3),
         "손익비": round((R * 2) / R, 1),          # 1차 목표 기준 = 2.0 고정
-        # 변동성이 큰 종목은 R 이 커서 목표가 52주 최고가를 넘어버린다.
-        # 한 번도 못 가본 값이라는 뜻이므로 그대로 두지 말고 표시해준다.
+        # 목표가 52주 최고를 넘는지. 다만 이건 대개 '목표가 커서'가 아니라
+        # '이미 최고가 근처라서' 생긴다 — 15종목을 재보니 넘는 쪽의 목표(+13%)가
+        # 오히려 안 넘는 쪽(+22%)보다 작았고, 갈린 건 52주 위치(86% vs 47%)였다.
+        # 그래서 최고가 부근인지 여부를 함께 넘겨 문구를 다르게 쓴다.
         "신고가필요": bool(hi52 and t1 > hi52),
+        "고점부근": bool((tech.get("pos52") or 0) >= 85),
+        "목표퍼센트": round((t1 / price - 1) * 100),
+        # 변동성이 큰 종목은 R 이 커져 목표가 몇 달짜리 큰 폭이 된다.
+        # 며칠 안에 닿을 값으로 착각하지 않도록 표시.
+        "큰폭": bool((t1 / price - 1) * 100 >= 25),
+        "pos52": tech.get("pos52"),
         "ma20": tech.get("ma20"), "ma60": tech.get("ma60"),
         "hi52": hi52, "lo52": tech.get("lo52"),
         "krw": krw,
@@ -762,6 +770,24 @@ def _fmt_px(v, krw):
     if v is None:
         return "-"
     return f"{round(v):,}원" if krw else f"${v:,.2f}"
+
+
+def level_notes(lv):
+    """목표가에 붙일 주의 문구. 없으면 빈 목록."""
+    if not lv:
+        return []
+    f = lambda v: _fmt_px(v, lv.get("krw"))
+    out = []
+    if lv.get("신고가필요"):
+        if lv.get("고점부근"):
+            # 이미 최고가 근처면 목표가 신고가인 게 당연하다. 겁줄 일이 아니다.
+            out.append(f"이미 52주 최고({f(lv['hi52'])}) 부근이라 목표는 자연히 신고가예요")
+        else:
+            out.append(f"52주 최고({f(lv['hi52'])})를 넘어야 닿는 값이에요")
+    if lv.get("큰폭"):
+        out.append(f"많이 흔들리는 종목이라 목표가 {lv['목표퍼센트']}%로 크게 잡혔어요. "
+                   f"며칠이 아니라 몇 달 볼 값이에요")
+    return out
 
 
 def pick_debate_targets(team, limit=2):
@@ -934,9 +960,9 @@ def format_verdict(d):
         f = lambda v: _fmt_px(v, lv.get("krw"))
         P.append(f"\n💵 <b>가격대</b>  <i>(지금 {f(lv['지금가'])})</i>")
         P.append(f"사기: {f(lv['매수1'])} · 더 눌리면 {f(lv['매수2'])}")
-        P.append(f"팔기: {f(lv['목표1'])} · 더 가면 {f(lv['목표2'])}"
-                 + (f"\n  ↑ 52주 최고({f(lv['hi52'])})를 넘어야 닿는 값이에요"
-                    if lv.get("신고가필요") else ""))
+        P.append(f"팔기: {f(lv['목표1'])} · 더 가면 {f(lv['목표2'])}")
+        for note in level_notes(lv):
+            P.append(f"  <i>{note}</i>")
         P.append(f"손절: {f(lv['손절가'])}  <i>(먹을 것이 잃을 것의 {lv['손익비']}배)</i>")
         if d.get("가격근거"):
             P.append(f"<i>{esc(d['가격근거'])}</i>")
