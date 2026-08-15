@@ -247,7 +247,13 @@ def fetch_news(company_code, size=20):
     return r.json()["result"]["body"]
 
 
-NAVER_HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+NAVER_HEADERS = {
+    "User-Agent": ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                   "(KHTML, like Gecko) Chrome/126.0 Safari/537.36"),
+    "Accept": "application/json, text/plain, */*",
+    "Accept-Language": "ko-KR,ko;q=0.9,en;q=0.8",
+    "Referer": "https://m.stock.naver.com/",
+}
 
 
 def fetch_candles(page_code, count=260):
@@ -1192,6 +1198,10 @@ def build_team(config, state, feed=None):
     rows, candle_map = [], {}
     feed = feed if feed is not None else load_feed()
     cutoff = (datetime.now() - timedelta(days=3)).strftime("%Y-%m-%d")
+    # 지난번 진단 결과. 네이버 조회가 막히는 환경(깃허브 서버 등)에서
+    # 멀쩡하던 재무 자료를 None 으로 덮어써 버리는 것을 막는다.
+    prev = {r["ticker"]: r for r in load_team()}
+    missed = []
     try:
         ranks = fetch_hot_ranks()
     except (requests.RequestException, KeyError):
@@ -1228,16 +1238,25 @@ def build_team(config, state, feed=None):
         except (requests.RequestException, KeyError, IndexError) as e:
             log(f"[{ticker}] 캔들 조회 실패: {e}")
             row["tech"] = None
-        try:
-            row["fund"] = fetch_fundamentals(state, ticker)
-        except (requests.RequestException, KeyError, ValueError) as e:
-            log(f"[{ticker}] 재무 조회 실패: {e}")
-            row["fund"] = None
-        try:
-            row["fin"] = fetch_financials(state, ticker)
-        except (requests.RequestException, KeyError, ValueError) as e:
-            log(f"[{ticker}] 연간 재무 조회 실패: {e}")
-            row["fin"] = None
+        old = prev.get(ticker, {})
+        for key, fetch, label in (("fund", fetch_fundamentals, "재무"),
+                                  ("fin", fetch_financials, "연간 재무")):
+            try:
+                got = fetch(state, ticker)
+            except (requests.RequestException, KeyError, ValueError) as e:
+                log(f"[{ticker}] {label} 조회 실패: {type(e).__name__}")
+                got = None
+            if got:
+                row[key] = got
+            elif old.get(key):
+                # 새로 못 가져왔지만 예전 값이 있으면 그대로 쓴다.
+                # 없는 것보다 며칠 지난 값이 훨씬 낫다 (재무는 분기마다 바뀜).
+                row[key] = old[key]
+                row.setdefault("stale", []).append(key)
+                missed.append(ticker)
+            else:
+                row[key] = None
+                missed.append(ticker)
         try:
             row["heat"] = fetch_community_heat(state, ticker)
         except (requests.RequestException, KeyError, ValueError) as e:
@@ -1252,6 +1271,10 @@ def build_team(config, state, feed=None):
         total = row["점수"]["종합"]
         row["신호"] = "강세" if total >= 65 else "약세" if total <= 40 else "중립"
         rows.append(row)
+    if missed:
+        n = len(set(missed))
+        log(f"⚠ 재무 자료를 새로 못 받은 종목 {n}개 — 이전 값을 유지했습니다. "
+            f"(네이버가 이 환경에서 막혔을 수 있음)")
     comments = analyze_team(config, rows)
     for row in rows:
         c = comments.get(row["ticker"], {})

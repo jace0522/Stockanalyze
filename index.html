@@ -120,7 +120,14 @@
   }
   .rname { flex:1; min-width:0; }
   .rname .n { font-size:15px; font-weight:600; color:var(--t1); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .rname .t { font-size:12px; color:var(--t4); margin-top:2px; }
+  .rname .t { font-size:12px; color:var(--t4); margin-top:2px;
+    display:flex; align-items:center; gap:6px; }
+  /* 접힌 목록에서도 싼지 비싼지 바로 보이게 (펼쳐야만 보이면 못 찾는다) */
+  .vchip { font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:5px;
+    line-height:1.4; white-space:nowrap; }
+  .vchip.저평가 { color:var(--green); background:rgba(21,196,126,.14); }
+  .vchip.고평가 { color:var(--up); background:rgba(245,68,90,.14); }
+  .vchip.적정   { display:none; }   /* 평범한 건 굳이 표시하지 않는다 */
   .rprice { text-align:right; white-space:nowrap; }
   .rprice .p { font-size:15px; font-weight:600; color:var(--t1); }
   .rprice .c { font-size:12.5px; margin-top:2px; font-weight:600; }
@@ -685,17 +692,18 @@ const PRICE = {};
   scored.forEach((t, i) => {
     const p = PRICE[t.ticker] || {}, sc = t['점수'], sig = t['신호'] || '중립';
     const tech = t.tech || {}, fund = t.fund || {}, z = t.size || {};
+    const val = t.val;
     const row = document.createElement('div');
     row.className = 'row'; row.dataset.i = i;
     row.innerHTML = `
       <div class="ava">${esc((t.name||'?').trim()[0])}</div>
-      <div class="rname"><div class="n">${esc(t.name)}</div><div class="t">${esc(t.ticker)}</div></div>
+      <div class="rname"><div class="n">${esc(t.name)}</div>
+        <div class="t">${esc(t.ticker)}${val ? `<span class="vchip ${val['판정']}">${val['판정']}</span>` : ''}</div></div>
       <div class="rprice">
         <div class="p num">${price(t.ticker, p.price)}</div>
         <div class="c num ${cls(p.change)}">${p.change != null ? sign(p.change)+'%' : ''}</div>
       </div>
       <div class="badge ${sig}"><span class="cu" data-to="${sc['종합']}">0</span></div>`;
-    const val = t.val;
     const det = document.createElement('div');
     det.className = 'detail';
     det.innerHTML = `
