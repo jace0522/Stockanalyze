@@ -205,7 +205,9 @@
   "source": "벤징가",
   "createdAt": "2026-08-17T23:37:26",
   "analyzedAt": "2026-08-17 22:42",
-  "alerted": false
+  "alerted": false,
+  "chk1": -0.68,
+  "hit1": true
  },
  {
   "id": "tipranks_3715325",
@@ -218,7 +220,9 @@
   "source": "TIPRANKS",
   "createdAt": "2026-08-17T23:29:13",
   "analyzedAt": "2026-08-17 22:42",
-  "alerted": false
+  "alerted": false,
+  "chk1": -0.68,
+  "hit1": true
  },
  {
   "id": "benzinga_61247933",
@@ -231,7 +235,9 @@
   "source": "벤징가",
   "createdAt": "2026-08-17T23:00:08",
   "analyzedAt": "2026-08-17 22:42",
-  "alerted": false
+  "alerted": false,
+  "chk1": -0.68,
+  "hit1": false
  },
  {
   "id": "tipranks_3715205",
@@ -244,7 +250,9 @@
   "source": "TIPRANKS",
   "createdAt": "2026-08-17T22:58:58",
   "analyzedAt": "2026-08-17 22:42",
-  "alerted": true
+  "alerted": true,
+  "chk1": -0.68,
+  "hit1": true
  },
  {
   "id": "benzinga_61247346",
@@ -400,7 +408,9 @@
   "source": "TIPRANKS",
   "createdAt": "2026-08-17T23:29:13",
   "analyzedAt": "2026-08-17 22:41",
-  "alerted": false
+  "alerted": false,
+  "chk1": -1.66,
+  "hit1": true
  },
  {
   "id": "tipranks_3715354",
@@ -413,7 +423,9 @@
   "source": "TIPRANKS",
   "createdAt": "2026-08-17T23:17:13",
   "analyzedAt": "2026-08-17 22:41",
-  "alerted": false
+  "alerted": false,
+  "chk1": -1.66,
+  "hit1": false
  },
  {
   "id": "tipranks_3715320",
@@ -439,7 +451,9 @@
   "source": "TIPRANKS",
   "createdAt": "2026-08-17T22:58:58",
   "analyzedAt": "2026-08-17 22:41",
-  "alerted": false
+  "alerted": false,
+  "chk1": -1.66,
+  "hit1": true
  },
  {
   "id": "benzinga_61247346",
@@ -465,7 +479,9 @@
   "source": "TIPRANKS",
   "createdAt": "2026-08-17T22:32:32",
   "analyzedAt": "2026-08-17 22:41",
-  "alerted": false
+  "alerted": false,
+  "chk1": -1.66,
+  "hit1": true
  },
  {
   "id": "mt_newswires_A3694128",
@@ -478,7 +494,9 @@
   "source": "MTNEWSWIRES",
   "createdAt": "2026-08-17T22:13:46",
   "analyzedAt": "2026-08-17 22:41",
-  "alerted": false
+  "alerted": false,
+  "chk1": -1.66,
+  "hit1": false
  },
  {
   "id": "tipranks_3714447",
@@ -491,7 +509,9 @@
   "source": "TIPRANKS",
   "createdAt": "2026-08-17T21:34:06",
   "analyzedAt": "2026-08-17 22:41",
-  "alerted": false
+  "alerted": false,
+  "chk1": -1.66,
+  "hit1": true
  },
  {
   "id": "tipranks_3710045",
@@ -517,7 +537,9 @@
   "source": "벤징가",
   "createdAt": "2026-08-17T19:54:54",
   "analyzedAt": "2026-08-17 22:41",
-  "alerted": true
+  "alerted": true,
+  "chk1": -1.66,
+  "hit1": true
  },
  {
   "id": "moneytoday_2026081718434818640",
@@ -530,7 +552,9 @@
   "source": "머니투데이",
   "createdAt": "2026-08-17T19:56:29",
   "analyzedAt": "2026-08-17 22:41",
-  "alerted": false
+  "alerted": false,
+  "chk1": -14.8,
+  "hit1": true
  },
  {
   "id": "coinreaders_P00320260817253044",
@@ -543,7 +567,9 @@
   "source": "코인리더스",
   "createdAt": "2026-08-17T09:49:52",
   "analyzedAt": "2026-08-17 22:41",
-  "alerted": false
+  "alerted": false,
+  "chk1": -14.8,
+  "hit1": false
  },
  {
   "id": "seokyung_2KG8USOB19",
@@ -1082,7 +1108,9 @@
   "source": "서울경제",
   "createdAt": "2026-08-17T23:41:20",
   "analyzedAt": "2026-08-17 22:40",
-  "alerted": false
+  "alerted": false,
+  "chk1": -4.01,
+  "hit1": false
  },
  {
   "id": "electronicnews_202608170097",
@@ -1108,7 +1136,9 @@
   "source": "이데일리",
   "createdAt": "2026-08-17T21:27:13",
   "analyzedAt": "2026-08-17 22:40",
-  "alerted": false
+  "alerted": false,
+  "chk1": -4.01,
+  "hit1": true
  },
  {
   "id": "benzinga_61261940",
@@ -1264,7 +1294,9 @@
   "source": "로이터",
   "createdAt": "2026-08-17T22:59:49",
   "analyzedAt": "2026-08-17 22:40",
-  "alerted": false
+  "alerted": false,
+  "chk1": 0.63,
+  "hit1": false
  },
  {
   "id": "benzinga_61246578",
@@ -1277,7 +1309,9 @@
   "source": "벤징가",
   "createdAt": "2026-08-17T22:37:45",
   "analyzedAt": "2026-08-17 22:40",
-  "alerted": false
+  "alerted": false,
+  "chk1": 0.63,
+  "hit1": true
  },
  {
   "id": "edaily_2026081721263300441",
@@ -1290,7 +1324,9 @@
   "source": "이데일리",
   "createdAt": "2026-08-17T21:26:33",
   "analyzedAt": "2026-08-17 22:40",
-  "alerted": false
+  "alerted": false,
+  "chk1": 0.63,
+  "hit1": true
  },
  {
   "id": "yonhap_usa_ICH799800",
@@ -1303,7 +1339,9 @@
   "source": "연합인포맥스",
   "createdAt": "2026-08-17T20:27:06",
   "analyzedAt": "2026-08-17 22:40",
-  "alerted": false
+  "alerted": false,
+  "chk1": 0.63,
+  "hit1": true
  },
  {
   "id": "reuter_FWN44E0GV",
@@ -1342,7 +1380,9 @@
   "source": "TIPRANKS",
   "createdAt": "2026-08-17T18:50:25",
   "analyzedAt": "2026-08-17 22:40",
-  "alerted": false
+  "alerted": false,
+  "chk1": 0.63,
+  "hit1": true
  },
  {
   "id": "benzinga_61240004",
@@ -1355,7 +1395,9 @@
   "source": "벤징가",
   "createdAt": "2026-08-17T18:49:46",
   "analyzedAt": "2026-08-17 22:40",
-  "alerted": false
+  "alerted": false,
+  "chk1": 0.63,
+  "hit1": false
  },
  {
   "id": "wallstreetjournal_kr_LL-20260817-2304:20260817002304",
@@ -1511,7 +1553,9 @@
   "source": "TIPRANKS",
   "createdAt": "2026-08-17T17:21:01",
   "analyzedAt": "2026-08-17 22:39",
-  "alerted": false
+  "alerted": false,
+  "chk1": 2.35,
+  "hit1": true
  },
  {
   "id": "tipranks_3710349",
@@ -1537,7 +1581,9 @@
   "source": "TIPRANKS",
   "createdAt": "2026-08-17T16:20:55",
   "analyzedAt": "2026-08-17 22:39",
-  "alerted": true
+  "alerted": true,
+  "chk1": 2.35,
+  "hit1": true
  },
  {
   "id": "tipranks_3709072",
@@ -1805,7 +1851,9 @@
   "source": "다우존스",
   "createdAt": "2026-08-17T23:30:25",
   "analyzedAt": "2026-08-17 22:39",
-  "alerted": false
+  "alerted": false,
+  "chk1": -3.17,
+  "hit1": true
  },
  {
   "id": "tipranks_3715198",
@@ -1818,7 +1866,9 @@
   "source": "TIPRANKS",
   "createdAt": "2026-08-17T23:24:06",
   "analyzedAt": "2026-08-17 22:38",
-  "alerted": false
+  "alerted": false,
+  "chk1": -3.17,
+  "hit1": false
  },
  {
   "id": "hankyung_X20260817.231835",
@@ -1831,7 +1881,9 @@
   "source": "한국경제",
   "createdAt": "2026-08-17T23:18:35",
   "analyzedAt": "2026-08-17 22:38",
-  "alerted": false
+  "alerted": false,
+  "chk1": -3.17,
+  "hit1": false
  },
  {
   "id": "tipranks_3715354",
@@ -1844,7 +1896,9 @@
   "source": "TIPRANKS",
   "createdAt": "2026-08-17T23:17:13",
   "analyzedAt": "2026-08-17 22:38",
-  "alerted": false
+  "alerted": false,
+  "chk1": -3.17,
+  "hit1": false
  },
  {
   "id": "benzinga_61246987",
@@ -1870,7 +1924,9 @@
   "source": "다우존스",
   "createdAt": "2026-08-17T22:36:35",
   "analyzedAt": "2026-08-17 22:38",
-  "alerted": false
+  "alerted": false,
+  "chk1": -3.17,
+  "hit1": false
  },
  {
   "id": "tipranks_3715220",
@@ -1883,7 +1939,9 @@
   "source": "TIPRANKS",
   "createdAt": "2026-08-17T22:35:39",
   "analyzedAt": "2026-08-17 22:38",
-  "alerted": false
+  "alerted": false,
+  "chk1": -3.17,
+  "hit1": true
  },
  {
   "id": "edaily_2026081722071200516",
@@ -1896,7 +1954,9 @@
   "source": "이데일리",
   "createdAt": "2026-08-17T22:07:12",
   "analyzedAt": "2026-08-17 22:38",
-  "alerted": false
+  "alerted": false,
+  "chk1": -3.17,
+  "hit1": false
  },
  {
   "id": "coinreaders_P00320260818253190",
@@ -2091,7 +2151,9 @@
   "source": "다우존스",
   "createdAt": "2026-08-17T23:30:25",
   "analyzedAt": "2026-08-17 22:38",
-  "alerted": false
+  "alerted": false,
+  "chk1": -0.72,
+  "hit1": true
  },
  {
   "id": "dowjones_kr_LL-20260817-4018:20260817004018",
@@ -2104,7 +2166,9 @@
   "source": "다우존스",
   "createdAt": "2026-08-17T22:31:53",
   "analyzedAt": "2026-08-17 22:38",
-  "alerted": false
+  "alerted": false,
+  "chk1": -0.72,
+  "hit1": false
  },
  {
   "id": "benzinga_61245245",
@@ -2143,7 +2207,9 @@
   "source": "이데일리",
   "createdAt": "2026-08-17T20:37:56",
   "analyzedAt": "2026-08-17 22:38",
-  "alerted": false
+  "alerted": false,
+  "chk1": -0.72,
+  "hit1": false
  },
  {
   "id": "benzinga_61241362",
@@ -2663,7 +2729,9 @@
   "source": "이데일리",
   "createdAt": "2026-08-17T23:50:31",
   "analyzedAt": "2026-08-17 22:35",
-  "alerted": false
+  "alerted": false,
+  "chk1": -0.7,
+  "hit1": false
  },
  {
   "id": "edaily_2026081723503100781",
@@ -2676,7 +2744,9 @@
   "source": "이데일리",
   "createdAt": "2026-08-17T23:50:31",
   "analyzedAt": "2026-08-17 22:35",
-  "alerted": false
+  "alerted": false,
+  "chk1": -0.7,
+  "hit1": false
  },
  {
   "id": "tipranks_3716715",
@@ -3716,7 +3786,9 @@
   "source": "벤징가",
   "createdAt": "2026-08-17T23:37:26",
   "analyzedAt": "2026-08-17 22:27",
-  "alerted": false
+  "alerted": false,
+  "chk1": 1.52,
+  "hit1": false
  },
  {
   "id": "tipranks_3705747",
