@@ -2999,7 +2999,7 @@
  "price_levels": {
   "SOXL": {
    "date": "2026-08-18",
-   "level": 2
+   "level": 3
   },
   "005930": {
    "date": "2026-08-12",
@@ -3047,21 +3047,21 @@
   {
    "code": ".VIX",
    "label": "공포지수",
-   "value": 15.77,
-   "change": 3.82,
+   "value": 15.87,
+   "change": 4.48,
    "mood": "보통"
   },
   {
    "code": ".IXIC",
    "label": "나스닥",
-   "value": 26371.79,
-   "change": -1.03
+   "value": 26312.56,
+   "change": -1.25
   },
   {
    "code": ".DJI",
    "label": "다우",
-   "value": 53419.15,
-   "change": -0.08
+   "value": 53345.4,
+   "change": -0.21
   },
   {
    "code": "KOSPI",
@@ -3078,8 +3078,8 @@
   {
    "code": "FX_USDKRW",
    "label": "원달러",
-   "value": 1411.5,
-   "change": -0.42
+   "value": 1412.3,
+   "change": -0.37
   }
  ],
  "tg_offset": 975795672
