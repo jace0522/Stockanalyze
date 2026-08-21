@@ -628,7 +628,9 @@
   "analyzedAt": "2026-08-17 22:41",
   "alerted": false,
   "chk1": 4.54,
-  "hit1": true
+  "hit1": true,
+  "chk5": -16.8,
+  "hit5": false
  },
  {
   "id": "seokyung_2KG8EU7LDV",
@@ -643,7 +645,9 @@
   "analyzedAt": "2026-08-17 22:41",
   "alerted": false,
   "chk1": 4.54,
-  "hit1": false
+  "hit1": false,
+  "chk5": -16.8,
+  "hit5": true
  },
  {
   "id": "electronicnews_202608150013",
@@ -658,7 +662,9 @@
   "analyzedAt": "2026-08-17 22:41",
   "alerted": false,
   "chk1": 4.54,
-  "hit1": true
+  "hit1": true,
+  "chk5": -16.8,
+  "hit5": false
  },
  {
   "id": "edaily_2026081807391100444",
@@ -1730,7 +1736,9 @@
   "analyzedAt": "2026-08-17 22:39",
   "alerted": false,
   "chk1": -2.71,
-  "hit1": true
+  "hit1": true,
+  "chk5": 1.86,
+  "hit5": false
  },
  {
   "id": "tipranks_3708898",
@@ -1745,7 +1753,9 @@
   "analyzedAt": "2026-08-17 22:39",
   "alerted": false,
   "chk1": -2.71,
-  "hit1": false
+  "hit1": false,
+  "chk5": 1.86,
+  "hit5": true
  },
  {
   "id": "tipranks_3708339",
@@ -1799,7 +1809,9 @@
   "analyzedAt": "2026-08-17 22:39",
   "alerted": false,
   "chk1": -2.71,
-  "hit1": false
+  "hit1": false,
+  "chk5": 1.86,
+  "hit5": true
  },
  {
   "id": "benzinga_61232824",
@@ -1814,7 +1826,9 @@
   "analyzedAt": "2026-08-17 22:39",
   "alerted": true,
   "chk1": -2.71,
-  "hit1": false
+  "hit1": false,
+  "chk5": 1.86,
+  "hit5": true
  },
  {
   "id": "chosunbiz_2026081800446",
@@ -4109,7 +4123,9 @@
   "analyzedAt": "2026-08-14 22:34",
   "alerted": false,
   "chk1": -0.47,
-  "hit1": true
+  "hit1": true,
+  "chk5": -1.37,
+  "hit5": true
  },
  {
   "id": "tipranks_3705598",
@@ -4124,7 +4140,9 @@
   "analyzedAt": "2026-08-14 22:34",
   "alerted": false,
   "chk1": -0.47,
-  "hit1": true
+  "hit1": true,
+  "chk5": -1.37,
+  "hit5": true
  },
  {
   "id": "benzinga_61226770",
@@ -4165,7 +4183,9 @@
   "analyzedAt": "2026-08-14 22:34",
   "alerted": false,
   "chk1": -0.47,
-  "hit1": true
+  "hit1": true,
+  "chk5": -1.37,
+  "hit5": true
  },
  {
   "id": "benzinga_61226079",
@@ -4245,7 +4265,9 @@
   "analyzedAt": "2026-08-14 22:34",
   "alerted": false,
   "chk1": -0.47,
-  "hit1": true
+  "hit1": true,
+  "chk5": -1.37,
+  "hit5": true
  },
  {
   "id": "benzinga_61219570",
@@ -4260,7 +4282,9 @@
   "analyzedAt": "2026-08-14 22:34",
   "alerted": false,
   "chk1": -0.47,
-  "hit1": false
+  "hit1": false,
+  "chk5": -1.37,
+  "hit5": false
  },
  {
   "id": "benzinga_61219419",
@@ -4301,6 +4325,8 @@
   "analyzedAt": "2026-08-14 22:34",
   "alerted": false,
   "chk1": -0.47,
-  "hit1": true
+  "hit1": true,
+  "chk5": -1.37,
+  "hit5": true
  }
 ]
