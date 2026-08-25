@@ -12,7 +12,9 @@
   "analyzedAt": "2026-08-17 22:42",
   "alerted": false,
   "chk1": 0.21,
-  "hit1": false
+  "hit1": false,
+  "chk5": -0.2,
+  "hit5": true
  },
  {
   "id": "tipranks_3716363",
@@ -27,7 +29,9 @@
   "analyzedAt": "2026-08-17 22:42",
   "alerted": false,
   "chk1": 0.21,
-  "hit1": false
+  "hit1": false,
+  "chk5": -0.2,
+  "hit5": true
  },
  {
   "id": "tipranks_3716381",
@@ -42,7 +46,9 @@
   "analyzedAt": "2026-08-17 22:42",
   "alerted": false,
   "chk1": 0.21,
-  "hit1": false
+  "hit1": false,
+  "chk5": -0.2,
+  "hit5": true
  },
  {
   "id": "benzinga_61259552",
@@ -57,7 +63,9 @@
   "analyzedAt": "2026-08-17 22:42",
   "alerted": false,
   "chk1": 0.21,
-  "hit1": true
+  "hit1": true,
+  "chk5": -0.2,
+  "hit5": false
  },
  {
   "id": "benzinga_61259362",
@@ -72,7 +80,9 @@
   "analyzedAt": "2026-08-17 22:42",
   "alerted": false,
   "chk1": 0.21,
-  "hit1": true
+  "hit1": true,
+  "chk5": -0.2,
+  "hit5": false
  },
  {
   "id": "benzinga_61258801",
@@ -87,7 +97,9 @@
   "analyzedAt": "2026-08-17 22:42",
   "alerted": false,
   "chk1": 0.21,
-  "hit1": false
+  "hit1": false,
+  "chk5": -0.2,
+  "hit5": true
  },
  {
   "id": "tipranks_3716242",
@@ -102,7 +114,9 @@
   "analyzedAt": "2026-08-17 22:42",
   "alerted": true,
   "chk1": 0.21,
-  "hit1": false
+  "hit1": false,
+  "chk5": -0.2,
+  "hit5": true
  },
  {
   "id": "tipranks_3716328",
@@ -117,7 +131,9 @@
   "analyzedAt": "2026-08-17 22:42",
   "alerted": false,
   "chk1": 0.21,
-  "hit1": false
+  "hit1": false,
+  "chk5": -0.2,
+  "hit5": true
  },
  {
   "id": "benzinga_61256549",
@@ -132,7 +148,9 @@
   "analyzedAt": "2026-08-17 22:42",
   "alerted": false,
   "chk1": 0.21,
-  "hit1": true
+  "hit1": true,
+  "chk5": -0.2,
+  "hit5": false
  },
  {
   "id": "benzinga_61256526",
@@ -173,7 +191,9 @@
   "analyzedAt": "2026-08-17 22:42",
   "alerted": false,
   "chk1": 0.21,
-  "hit1": true
+  "hit1": true,
+  "chk5": -0.2,
+  "hit5": false
  },
  {
   "id": "tipranks_3715587",
@@ -188,7 +208,9 @@
   "analyzedAt": "2026-08-17 22:42",
   "alerted": true,
   "chk1": 0.21,
-  "hit1": false
+  "hit1": false,
+  "chk5": -0.2,
+  "hit5": true
  },
  {
   "id": "benzinga_61251264",
@@ -216,7 +238,9 @@
   "analyzedAt": "2026-08-17 22:42",
   "alerted": false,
   "chk1": 0.21,
-  "hit1": true
+  "hit1": true,
+  "chk5": -0.2,
+  "hit5": false
  },
  {
   "id": "benzinga_61249755",
@@ -312,7 +336,9 @@
   "analyzedAt": "2026-08-17 22:42",
   "alerted": false,
   "chk1": -0.2,
-  "hit1": true
+  "hit1": true,
+  "chk5": -0.96,
+  "hit5": true
  },
  {
   "id": "tipranks_3716381",
@@ -327,7 +353,9 @@
   "analyzedAt": "2026-08-17 22:42",
   "alerted": false,
   "chk1": -0.2,
-  "hit1": true
+  "hit1": true,
+  "chk5": -0.96,
+  "hit5": true
  },
  {
   "id": "tipranks_3716242",
@@ -342,7 +370,9 @@
   "analyzedAt": "2026-08-17 22:42",
   "alerted": false,
   "chk1": -0.2,
-  "hit1": true
+  "hit1": true,
+  "chk5": -0.96,
+  "hit5": true
  },
  {
   "id": "tipranks_3716197",
@@ -357,7 +387,9 @@
   "analyzedAt": "2026-08-17 22:42",
   "alerted": false,
   "chk1": -0.2,
-  "hit1": true
+  "hit1": true,
+  "chk5": -0.96,
+  "hit5": true
  },
  {
   "id": "benzinga_61256549",
@@ -372,7 +404,9 @@
   "analyzedAt": "2026-08-17 22:42",
   "alerted": false,
   "chk1": -0.2,
-  "hit1": false
+  "hit1": false,
+  "chk5": -0.96,
+  "hit5": false
  },
  {
   "id": "mt_newswires_A3694308",
@@ -387,7 +421,9 @@
   "analyzedAt": "2026-08-17 22:42",
   "alerted": false,
   "chk1": -0.2,
-  "hit1": false
+  "hit1": false,
+  "chk5": -0.96,
+  "hit5": false
  },
  {
   "id": "benzinga_61255493",
@@ -402,7 +438,9 @@
   "analyzedAt": "2026-08-17 22:42",
   "alerted": false,
   "chk1": -0.2,
-  "hit1": false
+  "hit1": false,
+  "chk5": -0.96,
+  "hit5": false
  },
  {
   "id": "benzinga_61255382",
@@ -417,7 +455,9 @@
   "analyzedAt": "2026-08-17 22:41",
   "alerted": false,
   "chk1": -0.2,
-  "hit1": true
+  "hit1": true,
+  "chk5": -0.96,
+  "hit5": true
  },
  {
   "id": "tipranks_3715587",
@@ -432,7 +472,9 @@
   "analyzedAt": "2026-08-17 22:41",
   "alerted": false,
   "chk1": -0.2,
-  "hit1": true
+  "hit1": true,
+  "chk5": -0.96,
+  "hit5": true
  },
  {
   "id": "tipranks_3715441",
@@ -447,7 +489,9 @@
   "analyzedAt": "2026-08-17 22:41",
   "alerted": true,
   "chk1": -0.2,
-  "hit1": false
+  "hit1": false,
+  "chk5": -0.96,
+  "hit5": false
  },
  {
   "id": "tipranks_3715325",
@@ -705,7 +749,9 @@
   "analyzedAt": "2026-08-17 22:41",
   "alerted": false,
   "chk1": 0.19,
-  "hit1": true
+  "hit1": true,
+  "chk5": 5.8,
+  "hit5": true
  },
  {
   "id": "businesswatch_202608120052",
@@ -720,7 +766,9 @@
   "analyzedAt": "2026-08-17 22:41",
   "alerted": false,
   "chk1": 0.19,
-  "hit1": false
+  "hit1": false,
+  "chk5": 5.8,
+  "hit5": false
  },
  {
   "id": "financial_202608180651358692",
@@ -735,7 +783,9 @@
   "analyzedAt": "2026-08-17 22:41",
   "alerted": false,
   "chk1": 0.19,
-  "hit1": true
+  "hit1": true,
+  "chk5": 5.8,
+  "hit5": true
  },
  {
   "id": "ajukyung_20260818065308193",
@@ -750,7 +800,9 @@
   "analyzedAt": "2026-08-17 22:41",
   "alerted": false,
   "chk1": 0.19,
-  "hit1": false
+  "hit1": false,
+  "chk5": 5.8,
+  "hit5": false
  },
  {
   "id": "maekyung_000012129771",
@@ -765,7 +817,9 @@
   "analyzedAt": "2026-08-17 22:41",
   "alerted": false,
   "chk1": 0.19,
-  "hit1": false
+  "hit1": false,
+  "chk5": 5.8,
+  "hit5": false
  },
  {
   "id": "yna_AKR20260818006451072",
@@ -780,7 +834,9 @@
   "analyzedAt": "2026-08-17 22:41",
   "alerted": false,
   "chk1": 0.19,
-  "hit1": false
+  "hit1": false,
+  "chk5": 5.8,
+  "hit5": false
  },
  {
   "id": "seokyung_2KG9RTKNSS",
@@ -795,7 +851,9 @@
   "analyzedAt": "2026-08-17 22:41",
   "alerted": false,
   "chk1": 0.19,
-  "hit1": false
+  "hit1": false,
+  "chk5": 5.8,
+  "hit5": false
  },
  {
   "id": "news1_6261009",
@@ -823,7 +881,9 @@
   "analyzedAt": "2026-08-17 22:41",
   "alerted": false,
   "chk1": 0.19,
-  "hit1": true
+  "hit1": true,
+  "chk5": 5.8,
+  "hit5": true
  },
  {
   "id": "news1_6259823",
@@ -838,7 +898,9 @@
   "analyzedAt": "2026-08-17 22:41",
   "alerted": false,
   "chk1": 0.19,
-  "hit1": true
+  "hit1": true,
+  "chk5": 5.8,
+  "hit5": true
  },
  {
   "id": "news1_6261014",
@@ -853,7 +915,9 @@
   "analyzedAt": "2026-08-17 22:41",
   "alerted": false,
   "chk1": 0.19,
-  "hit1": false
+  "hit1": false,
+  "chk5": 5.8,
+  "hit5": false
  },
  {
   "id": "news1_6261127",
@@ -868,7 +932,9 @@
   "analyzedAt": "2026-08-17 22:41",
   "alerted": false,
   "chk1": 0.19,
-  "hit1": true
+  "hit1": true,
+  "chk5": 5.8,
+  "hit5": true
  },
  {
   "id": "financial_202608171505207920",
@@ -883,7 +949,9 @@
   "analyzedAt": "2026-08-17 22:41",
   "alerted": false,
   "chk1": 0.19,
-  "hit1": true
+  "hit1": true,
+  "chk5": 5.8,
+  "hit5": true
  },
  {
   "id": "etoday_2026081700068",
@@ -898,7 +966,9 @@
   "analyzedAt": "2026-08-17 22:41",
   "alerted": false,
   "chk1": 0.19,
-  "hit1": true
+  "hit1": true,
+  "chk5": 5.8,
+  "hit5": true
  },
  {
   "id": "financial_202608171203532978",
@@ -913,7 +983,9 @@
   "analyzedAt": "2026-08-17 22:41",
   "alerted": true,
   "chk1": 0.19,
-  "hit1": false
+  "hit1": false,
+  "chk5": 5.8,
+  "hit5": false
  },
  {
   "id": "news1_6261163",
@@ -928,7 +1000,9 @@
   "analyzedAt": "2026-08-17 22:41",
   "alerted": false,
   "chk1": 0.19,
-  "hit1": true
+  "hit1": true,
+  "chk5": 5.8,
+  "hit5": true
  },
  {
   "id": "seokyung_2KG9S1J1GH",
@@ -943,7 +1017,9 @@
   "analyzedAt": "2026-08-17 22:41",
   "alerted": false,
   "chk1": 0.19,
-  "hit1": true
+  "hit1": true,
+  "chk5": 5.8,
+  "hit5": true
  },
  {
   "id": "etoday_2026081700074",
@@ -958,7 +1034,9 @@
   "analyzedAt": "2026-08-17 22:41",
   "alerted": false,
   "chk1": 0.19,
-  "hit1": false
+  "hit1": false,
+  "chk5": 5.8,
+  "hit5": false
  },
  {
   "id": "financial_202608180501547481",
@@ -973,7 +1051,9 @@
   "analyzedAt": "2026-08-17 22:41",
   "alerted": false,
   "chk1": 0.19,
-  "hit1": true
+  "hit1": true,
+  "chk5": 5.8,
+  "hit5": true
  },
  {
   "id": "electronicnews_202608170097",
@@ -1014,7 +1094,9 @@
   "analyzedAt": "2026-08-17 22:40",
   "alerted": false,
   "chk1": -2.28,
-  "hit1": true
+  "hit1": true,
+  "chk5": -0.95,
+  "hit5": true
  },
  {
   "id": "financial_202608180651358692",
@@ -1029,7 +1111,9 @@
   "analyzedAt": "2026-08-17 22:40",
   "alerted": false,
   "chk1": -2.28,
-  "hit1": false
+  "hit1": false,
+  "chk5": -0.95,
+  "hit5": false
  },
  {
   "id": "maekyung_000012129422",
@@ -1057,7 +1141,9 @@
   "analyzedAt": "2026-08-17 22:40",
   "alerted": false,
   "chk1": -2.28,
-  "hit1": false
+  "hit1": false,
+  "chk5": -0.95,
+  "hit5": false
  },
  {
   "id": "seokyung_2KG9RY6JOV",
@@ -1072,7 +1158,9 @@
   "analyzedAt": "2026-08-17 22:40",
   "alerted": true,
   "chk1": -2.28,
-  "hit1": false
+  "hit1": false,
+  "chk5": -0.95,
+  "hit5": false
  },
  {
   "id": "maekyung_000012129762",
@@ -1087,7 +1175,9 @@
   "analyzedAt": "2026-08-17 22:40",
   "alerted": false,
   "chk1": -2.28,
-  "hit1": false
+  "hit1": false,
+  "chk5": -0.95,
+  "hit5": false
  },
  {
   "id": "maekyung_000012129755",
@@ -1115,7 +1205,9 @@
   "analyzedAt": "2026-08-17 22:40",
   "alerted": false,
   "chk1": -2.28,
-  "hit1": false
+  "hit1": false,
+  "chk5": -0.95,
+  "hit5": false
  },
  {
   "id": "news1_6261127",
@@ -1130,7 +1222,9 @@
   "analyzedAt": "2026-08-17 22:40",
   "alerted": false,
   "chk1": -2.28,
-  "hit1": false
+  "hit1": false,
+  "chk5": -0.95,
+  "hit5": false
  },
  {
   "id": "etoday_2026081700068",
@@ -1145,7 +1239,9 @@
   "analyzedAt": "2026-08-17 22:40",
   "alerted": false,
   "chk1": -2.28,
-  "hit1": false
+  "hit1": false,
+  "chk5": -0.95,
+  "hit5": false
  },
  {
   "id": "financial_202608171203532978",
@@ -1160,7 +1256,9 @@
   "analyzedAt": "2026-08-17 22:40",
   "alerted": true,
   "chk1": -2.28,
-  "hit1": true
+  "hit1": true,
+  "chk5": -0.95,
+  "hit5": true
  },
  {
   "id": "moneys_2026081412290113120",
@@ -1175,7 +1273,9 @@
   "analyzedAt": "2026-08-17 22:40",
   "alerted": false,
   "chk1": -2.28,
-  "hit1": true
+  "hit1": true,
+  "chk5": -0.95,
+  "hit5": true
  },
  {
   "id": "seokyung_2KG9S1J1GH",
@@ -1190,7 +1290,9 @@
   "analyzedAt": "2026-08-17 22:40",
   "alerted": false,
   "chk1": -2.28,
-  "hit1": false
+  "hit1": false,
+  "chk5": -0.95,
+  "hit5": false
  },
  {
   "id": "edaily_2026081805030200198",
@@ -1205,7 +1307,9 @@
   "analyzedAt": "2026-08-17 22:40",
   "alerted": false,
   "chk1": -2.28,
-  "hit1": false
+  "hit1": false,
+  "chk5": -0.95,
+  "hit5": false
  },
  {
   "id": "edaily_2026081805020200193",
@@ -1220,7 +1324,9 @@
   "analyzedAt": "2026-08-17 22:40",
   "alerted": false,
   "chk1": -2.28,
-  "hit1": false
+  "hit1": false,
+  "chk5": -0.95,
+  "hit5": false
  },
  {
   "id": "seokyung_2KG9RD73VS",
@@ -1295,7 +1401,9 @@
   "analyzedAt": "2026-08-17 22:40",
   "alerted": false,
   "chk1": -1.65,
-  "hit1": false
+  "hit1": false,
+  "chk5": -1.81,
+  "hit5": false
  },
  {
   "id": "tipranks_3716486",
@@ -1310,7 +1418,9 @@
   "analyzedAt": "2026-08-17 22:40",
   "alerted": false,
   "chk1": -1.65,
-  "hit1": true
+  "hit1": true,
+  "chk5": -1.81,
+  "hit5": true
  },
  {
   "id": "tipranks_3716468",
@@ -1338,7 +1448,9 @@
   "analyzedAt": "2026-08-17 22:40",
   "alerted": false,
   "chk1": -1.65,
-  "hit1": true
+  "hit1": true,
+  "chk5": -1.81,
+  "hit5": true
  },
  {
   "id": "reuter_TUA55NVPY",
@@ -1353,7 +1465,9 @@
   "analyzedAt": "2026-08-17 22:40",
   "alerted": false,
   "chk1": -1.65,
-  "hit1": false
+  "hit1": false,
+  "chk5": -1.81,
+  "hit5": false
  },
  {
   "id": "reuter_L6N44E0OA",
@@ -1368,7 +1482,9 @@
   "analyzedAt": "2026-08-17 22:40",
   "alerted": false,
   "chk1": -1.65,
-  "hit1": true
+  "hit1": true,
+  "chk5": -1.81,
+  "hit5": true
  },
  {
   "id": "tipranks_3716129",
@@ -1383,7 +1499,9 @@
   "analyzedAt": "2026-08-17 22:40",
   "alerted": false,
   "chk1": -1.65,
-  "hit1": false
+  "hit1": false,
+  "chk5": -1.81,
+  "hit5": false
  },
  {
   "id": "mt_newswires_A3694316",
@@ -1398,7 +1516,9 @@
   "analyzedAt": "2026-08-17 22:40",
   "alerted": false,
   "chk1": -1.65,
-  "hit1": false
+  "hit1": false,
+  "chk5": -1.81,
+  "hit5": false
  },
  {
   "id": "mt_newswires_A3694315",
@@ -1413,7 +1533,9 @@
   "analyzedAt": "2026-08-17 22:40",
   "alerted": false,
   "chk1": -1.65,
-  "hit1": false
+  "hit1": false,
+  "chk5": -1.81,
+  "hit5": false
  },
  {
   "id": "reuter_L4N44E15U",
@@ -1428,7 +1550,9 @@
   "analyzedAt": "2026-08-17 22:40",
   "alerted": false,
   "chk1": -1.65,
-  "hit1": false
+  "hit1": false,
+  "chk5": -1.81,
+  "hit5": false
  },
  {
   "id": "mt_newswires_A3694182",
@@ -1662,7 +1786,9 @@
   "analyzedAt": "2026-08-17 22:39",
   "alerted": false,
   "chk1": 3.16,
-  "hit1": false
+  "hit1": false,
+  "chk5": 5.73,
+  "hit5": false
  },
  {
   "id": "benzinga_61254397",
@@ -1677,7 +1803,9 @@
   "analyzedAt": "2026-08-17 22:39",
   "alerted": false,
   "chk1": 3.16,
-  "hit1": true
+  "hit1": true,
+  "chk5": 5.73,
+  "hit5": true
  },
  {
   "id": "tipranks_3715565",
@@ -1692,7 +1820,9 @@
   "analyzedAt": "2026-08-17 22:39",
   "alerted": false,
   "chk1": 3.16,
-  "hit1": false
+  "hit1": false,
+  "chk5": 5.73,
+  "hit5": false
  },
  {
   "id": "benzinga_61252587",
@@ -1707,7 +1837,9 @@
   "analyzedAt": "2026-08-17 22:39",
   "alerted": false,
   "chk1": 3.16,
-  "hit1": false
+  "hit1": false,
+  "chk5": 5.73,
+  "hit5": false
  },
  {
   "id": "mt_newswires_A3693938",
@@ -1889,7 +2021,9 @@
   "analyzedAt": "2026-08-17 22:39",
   "alerted": false,
   "chk1": -4.6,
-  "hit1": true
+  "hit1": true,
+  "chk5": -6.13,
+  "hit5": true
  },
  {
   "id": "tipranks_3716440",
@@ -1943,7 +2077,9 @@
   "analyzedAt": "2026-08-17 22:39",
   "alerted": false,
   "chk1": -4.6,
-  "hit1": true
+  "hit1": true,
+  "chk5": -6.13,
+  "hit5": true
  },
  {
   "id": "tipranks_3716078",
@@ -1971,7 +2107,9 @@
   "analyzedAt": "2026-08-17 22:39",
   "alerted": false,
   "chk1": -4.6,
-  "hit1": true
+  "hit1": true,
+  "chk5": -6.13,
+  "hit5": true
  },
  {
   "id": "tipranks_3715890",
@@ -1986,7 +2124,9 @@
   "analyzedAt": "2026-08-17 22:39",
   "alerted": true,
   "chk1": -4.6,
-  "hit1": false
+  "hit1": false,
+  "chk5": -6.13,
+  "hit5": false
  },
  {
   "id": "dowjones_kr_LL-20260817-5214:20260817005214",
@@ -2001,7 +2141,9 @@
   "analyzedAt": "2026-08-17 22:39",
   "alerted": false,
   "chk1": -4.6,
-  "hit1": true
+  "hit1": true,
+  "chk5": -6.13,
+  "hit5": true
  },
  {
   "id": "benzinga_61252661",
@@ -2016,7 +2158,9 @@
   "analyzedAt": "2026-08-17 22:39",
   "alerted": false,
   "chk1": -4.6,
-  "hit1": false
+  "hit1": false,
+  "chk5": -6.13,
+  "hit5": false
  },
  {
   "id": "tipranks_3713576",
@@ -2031,7 +2175,9 @@
   "analyzedAt": "2026-08-17 22:39",
   "alerted": false,
   "chk1": -4.6,
-  "hit1": false
+  "hit1": false,
+  "chk5": -6.13,
+  "hit5": false
  },
  {
   "id": "tipranks_3709714",
@@ -2046,7 +2192,9 @@
   "analyzedAt": "2026-08-17 22:39",
   "alerted": true,
   "chk1": -4.6,
-  "hit1": false
+  "hit1": false,
+  "chk5": -6.13,
+  "hit5": false
  },
  {
   "id": "dowjones_kr_LL-20260817-4486:20260817004486",
@@ -2193,7 +2341,9 @@
   "analyzedAt": "2026-08-17 22:38",
   "alerted": true,
   "chk1": 4.23,
-  "hit1": true
+  "hit1": true,
+  "chk5": 3.93,
+  "hit5": true
  },
  {
   "id": "edaily_2026081806223600366",
@@ -2208,7 +2358,9 @@
   "analyzedAt": "2026-08-17 22:38",
   "alerted": true,
   "chk1": 4.23,
-  "hit1": true
+  "hit1": true,
+  "chk5": 3.93,
+  "hit5": true
  },
  {
   "id": "reuter_L4N44E1B3",
@@ -2223,7 +2375,9 @@
   "analyzedAt": "2026-08-17 22:38",
   "alerted": true,
   "chk1": 4.23,
-  "hit1": true
+  "hit1": true,
+  "chk5": 3.93,
+  "hit5": true
  },
  {
   "id": "tipranks_3716507",
@@ -2238,7 +2392,9 @@
   "analyzedAt": "2026-08-17 22:38",
   "alerted": true,
   "chk1": 4.23,
-  "hit1": true
+  "hit1": true,
+  "chk5": 3.93,
+  "hit5": true
  },
  {
   "id": "benzinga_61259954",
@@ -2266,7 +2422,9 @@
   "analyzedAt": "2026-08-17 22:38",
   "alerted": true,
   "chk1": 4.23,
-  "hit1": true
+  "hit1": true,
+  "chk5": 3.93,
+  "hit5": true
  },
  {
   "id": "benzinga_61256549",
@@ -2294,7 +2452,9 @@
   "analyzedAt": "2026-08-17 22:38",
   "alerted": false,
   "chk1": 4.23,
-  "hit1": false
+  "hit1": false,
+  "chk5": 3.93,
+  "hit5": false
  },
  {
   "id": "coinreaders_P00320260818253159",
@@ -2309,7 +2469,9 @@
   "analyzedAt": "2026-08-17 22:38",
   "alerted": false,
   "chk1": 4.23,
-  "hit1": false
+  "hit1": false,
+  "chk5": 3.93,
+  "hit5": false
  },
  {
   "id": "tipranks_3716056",
@@ -2324,7 +2486,9 @@
   "analyzedAt": "2026-08-17 22:38",
   "alerted": false,
   "chk1": 4.23,
-  "hit1": false
+  "hit1": false,
+  "chk5": 3.93,
+  "hit5": false
  },
  {
   "id": "benzinga_61254396",
@@ -2339,7 +2503,9 @@
   "analyzedAt": "2026-08-17 22:38",
   "alerted": false,
   "chk1": 4.23,
-  "hit1": true
+  "hit1": true,
+  "chk5": 3.93,
+  "hit5": true
  },
  {
   "id": "benzinga_61252561",
@@ -2354,7 +2520,9 @@
   "analyzedAt": "2026-08-17 22:38",
   "alerted": false,
   "chk1": 4.23,
-  "hit1": true
+  "hit1": true,
+  "chk5": 3.93,
+  "hit5": true
  },
  {
   "id": "tipranks_3715678",
@@ -2369,7 +2537,9 @@
   "analyzedAt": "2026-08-17 22:38",
   "alerted": false,
   "chk1": 4.23,
-  "hit1": true
+  "hit1": true,
+  "chk5": 3.93,
+  "hit5": true
  },
  {
   "id": "tipranks_3715234",
@@ -2384,7 +2554,9 @@
   "analyzedAt": "2026-08-17 22:38",
   "alerted": false,
   "chk1": 4.23,
-  "hit1": false
+  "hit1": false,
+  "chk5": 3.93,
+  "hit5": false
  },
  {
   "id": "dowjones_kr_LL-20260817-4486:20260817004486",
@@ -2502,7 +2674,9 @@
   "analyzedAt": "2026-08-17 22:38",
   "alerted": false,
   "chk1": 0.46,
-  "hit1": true
+  "hit1": true,
+  "chk5": 4.79,
+  "hit5": true
  },
  {
   "id": "dowjones_kr_LL-20260817-6565:20260817006565",
@@ -2517,7 +2691,9 @@
   "analyzedAt": "2026-08-17 22:38",
   "alerted": false,
   "chk1": 0.46,
-  "hit1": false
+  "hit1": false,
+  "chk5": 4.79,
+  "hit5": false
  },
  {
   "id": "wallstreetjournal_kr_LL-20260817-6431:20260817006431",
@@ -2532,7 +2708,9 @@
   "analyzedAt": "2026-08-17 22:38",
   "alerted": false,
   "chk1": 0.46,
-  "hit1": false
+  "hit1": false,
+  "chk5": 4.79,
+  "hit5": false
  },
  {
   "id": "news1_6261163",
@@ -2547,7 +2725,9 @@
   "analyzedAt": "2026-08-17 22:38",
   "alerted": false,
   "chk1": 0.46,
-  "hit1": true
+  "hit1": true,
+  "chk5": 4.79,
+  "hit5": true
  },
  {
   "id": "reuter_L6N44E0Z5",
@@ -2562,7 +2742,9 @@
   "analyzedAt": "2026-08-17 22:38",
   "alerted": false,
   "chk1": 0.46,
-  "hit1": false
+  "hit1": false,
+  "chk5": 4.79,
+  "hit5": false
  },
  {
   "id": "financial_202608180522180785",
@@ -2590,7 +2772,9 @@
   "analyzedAt": "2026-08-17 22:37",
   "alerted": false,
   "chk1": 0.46,
-  "hit1": false
+  "hit1": false,
+  "chk5": 4.79,
+  "hit5": false
  },
  {
   "id": "tipranks_3716381",
@@ -2618,7 +2802,9 @@
   "analyzedAt": "2026-08-17 22:37",
   "alerted": false,
   "chk1": 0.46,
-  "hit1": true
+  "hit1": true,
+  "chk5": 4.79,
+  "hit5": true
  },
  {
   "id": "reuter_L8N44E1A3",
@@ -2633,7 +2819,9 @@
   "analyzedAt": "2026-08-17 22:37",
   "alerted": true,
   "chk1": 0.46,
-  "hit1": true
+  "hit1": true,
+  "chk5": 4.79,
+  "hit5": true
  },
  {
   "id": "financial_202608180306326365",
@@ -2648,7 +2836,9 @@
   "analyzedAt": "2026-08-17 22:37",
   "alerted": true,
   "chk1": 0.46,
-  "hit1": false
+  "hit1": false,
+  "chk5": 4.79,
+  "hit5": false
  },
  {
   "id": "moneytoday_2026081719390311963",
@@ -2663,7 +2853,9 @@
   "analyzedAt": "2026-08-17 22:37",
   "alerted": false,
   "chk1": 0.46,
-  "hit1": false
+  "hit1": false,
+  "chk5": 4.79,
+  "hit5": false
  },
  {
   "id": "benzinga_61257572",
@@ -2678,7 +2870,9 @@
   "analyzedAt": "2026-08-17 22:37",
   "alerted": false,
   "chk1": 0.46,
-  "hit1": false
+  "hit1": false,
+  "chk5": 4.79,
+  "hit5": false
  },
  {
   "id": "benzinga_61257475",
@@ -2693,7 +2887,9 @@
   "analyzedAt": "2026-08-17 22:37",
   "alerted": true,
   "chk1": 0.46,
-  "hit1": false
+  "hit1": false,
+  "chk5": 4.79,
+  "hit5": false
  },
  {
   "id": "benzinga_61256549",
@@ -2721,7 +2917,9 @@
   "analyzedAt": "2026-08-17 22:37",
   "alerted": true,
   "chk1": 0.46,
-  "hit1": true
+  "hit1": true,
+  "chk5": 4.79,
+  "hit5": true
  },
  {
   "id": "tipranks_3716108",
@@ -2749,7 +2947,9 @@
   "analyzedAt": "2026-08-17 22:37",
   "alerted": false,
   "chk1": 0.46,
-  "hit1": false
+  "hit1": false,
+  "chk5": 4.79,
+  "hit5": false
  },
  {
   "id": "tipranks_3715890",
@@ -2764,7 +2964,9 @@
   "analyzedAt": "2026-08-17 22:37",
   "alerted": false,
   "chk1": 0.46,
-  "hit1": true
+  "hit1": true,
+  "chk5": 4.79,
+  "hit5": true
  },
  {
   "id": "benzinga_61262162",
@@ -2792,7 +2994,9 @@
   "analyzedAt": "2026-08-17 22:37",
   "alerted": false,
   "chk1": 2.48,
-  "hit1": false
+  "hit1": false,
+  "chk5": 0.59,
+  "hit5": false
  },
  {
   "id": "benzinga_61259954",
@@ -2846,7 +3050,9 @@
   "analyzedAt": "2026-08-17 22:36",
   "alerted": false,
   "chk1": 2.48,
-  "hit1": true
+  "hit1": true,
+  "chk5": 0.59,
+  "hit5": true
  },
  {
   "id": "dowjones_kr_LL-20260817-5525:20260817005525",
@@ -2861,7 +3067,9 @@
   "analyzedAt": "2026-08-17 22:36",
   "alerted": true,
   "chk1": 2.48,
-  "hit1": true
+  "hit1": true,
+  "chk5": 0.59,
+  "hit5": true
  },
  {
   "id": "benzinga_61257111",
@@ -2954,7 +3162,9 @@
   "analyzedAt": "2026-08-17 22:36",
   "alerted": false,
   "chk1": 2.48,
-  "hit1": true
+  "hit1": true,
+  "chk5": 0.59,
+  "hit5": true
  },
  {
   "id": "tipranks_3715900",
@@ -2995,7 +3205,9 @@
   "analyzedAt": "2026-08-17 22:35",
   "alerted": false,
   "chk1": 2.48,
-  "hit1": true
+  "hit1": true,
+  "chk5": 0.59,
+  "hit5": true
  },
  {
   "id": "benzinga_61254054",
@@ -3010,7 +3222,9 @@
   "analyzedAt": "2026-08-17 22:35",
   "alerted": false,
   "chk1": 2.48,
-  "hit1": true
+  "hit1": true,
+  "chk5": 0.59,
+  "hit5": true
  },
  {
   "id": "edaily_overseas_2026081723503100781",
@@ -3072,7 +3286,9 @@
   "analyzedAt": "2026-08-17 22:35",
   "alerted": false,
   "chk1": 0.17,
-  "hit1": false
+  "hit1": false,
+  "chk5": 0.78,
+  "hit5": false
  },
  {
   "id": "reuter_L1N44E0TP",
@@ -3087,7 +3303,9 @@
   "analyzedAt": "2026-08-17 22:35",
   "alerted": false,
   "chk1": 0.17,
-  "hit1": true
+  "hit1": true,
+  "chk5": 0.78,
+  "hit5": true
  },
  {
   "id": "reuter_L6N44E0NF",
@@ -3102,7 +3320,9 @@
   "analyzedAt": "2026-08-17 22:35",
   "alerted": false,
   "chk1": 0.17,
-  "hit1": false
+  "hit1": false,
+  "chk5": 0.78,
+  "hit5": false
  },
  {
   "id": "dowjones_kr_LL-20260817-6401:20260817006401",
@@ -3117,7 +3337,9 @@
   "analyzedAt": "2026-08-17 22:34",
   "alerted": false,
   "chk1": 0.17,
-  "hit1": false
+  "hit1": false,
+  "chk5": 0.78,
+  "hit5": false
  },
  {
   "id": "tipranks_3716440",
@@ -3145,7 +3367,9 @@
   "analyzedAt": "2026-08-17 22:34",
   "alerted": false,
   "chk1": 0.17,
-  "hit1": false
+  "hit1": false,
+  "chk5": 0.78,
+  "hit5": false
  },
  {
   "id": "dowjones_kr_LL-20260817-6141:20260817006141",
@@ -3160,7 +3384,9 @@
   "analyzedAt": "2026-08-17 22:34",
   "alerted": false,
   "chk1": 0.17,
-  "hit1": true
+  "hit1": true,
+  "chk5": 0.78,
+  "hit5": true
  },
  {
   "id": "dowjones_kr_LL-20260817-6101:20260817006101",
@@ -3201,7 +3427,9 @@
   "analyzedAt": "2026-08-17 22:34",
   "alerted": false,
   "chk1": 0.17,
-  "hit1": true
+  "hit1": true,
+  "chk5": 0.78,
+  "hit5": true
  },
  {
   "id": "mt_newswires_A3694392",
@@ -3216,7 +3444,9 @@
   "analyzedAt": "2026-08-17 22:34",
   "alerted": false,
   "chk1": 0.17,
-  "hit1": true
+  "hit1": true,
+  "chk5": 0.78,
+  "hit5": true
  },
  {
   "id": "benzinga_61259923",
@@ -3231,7 +3461,9 @@
   "analyzedAt": "2026-08-17 22:34",
   "alerted": false,
   "chk1": 0.17,
-  "hit1": true
+  "hit1": true,
+  "chk5": 0.78,
+  "hit5": true
  },
  {
   "id": "benzinga_61259752",
@@ -3246,7 +3478,9 @@
   "analyzedAt": "2026-08-17 22:34",
   "alerted": false,
   "chk1": 0.17,
-  "hit1": true
+  "hit1": true,
+  "chk5": 0.78,
+  "hit5": true
  },
  {
   "id": "mt_newswires_A3694384",
@@ -3287,7 +3521,9 @@
   "analyzedAt": "2026-08-17 22:33",
   "alerted": false,
   "chk1": 0.17,
-  "hit1": true
+  "hit1": true,
+  "chk5": 0.78,
+  "hit5": true
  },
  {
   "id": "benzinga_61257876",
@@ -3341,7 +3577,9 @@
   "analyzedAt": "2026-08-17 22:33",
   "alerted": false,
   "chk1": -0.92,
-  "hit1": false
+  "hit1": false,
+  "chk5": -3.04,
+  "hit5": false
  },
  {
   "id": "bloomingbit_P00120260818118508",
@@ -3356,7 +3594,9 @@
   "analyzedAt": "2026-08-17 22:33",
   "alerted": true,
   "chk1": -0.92,
-  "hit1": false
+  "hit1": false,
+  "chk5": -3.04,
+  "hit5": false
  },
  {
   "id": "ajukyung_20260818065308193",
@@ -3371,7 +3611,9 @@
   "analyzedAt": "2026-08-17 22:33",
   "alerted": false,
   "chk1": -0.92,
-  "hit1": true
+  "hit1": true,
+  "chk5": -3.04,
+  "hit5": true
  },
  {
   "id": "yna_AKR20260818006451072",
@@ -3386,7 +3628,9 @@
   "analyzedAt": "2026-08-17 22:32",
   "alerted": false,
   "chk1": -0.92,
-  "hit1": true
+  "hit1": true,
+  "chk5": -3.04,
+  "hit5": true
  },
  {
   "id": "edaily_overseas_2026081806302200379",
@@ -3401,7 +3645,9 @@
   "analyzedAt": "2026-08-17 22:32",
   "alerted": true,
   "chk1": -0.92,
-  "hit1": false
+  "hit1": false,
+  "chk5": -3.04,
+  "hit5": false
  },
  {
   "id": "edaily_2026081806302200379",
@@ -3416,7 +3662,9 @@
   "analyzedAt": "2026-08-17 22:32",
   "alerted": true,
   "chk1": -0.92,
-  "hit1": false
+  "hit1": false,
+  "chk5": -3.04,
+  "hit5": false
  },
  {
   "id": "chosunbiz_2026081800446",
@@ -3431,7 +3679,9 @@
   "analyzedAt": "2026-08-17 22:32",
   "alerted": false,
   "chk1": -0.92,
-  "hit1": true
+  "hit1": true,
+  "chk5": -3.04,
+  "hit5": true
  },
  {
   "id": "dowjones_kr_LL-20260817-6540:20260817006540",
@@ -3446,7 +3696,9 @@
   "analyzedAt": "2026-08-17 22:32",
   "alerted": false,
   "chk1": -0.92,
-  "hit1": false
+  "hit1": false,
+  "chk5": -3.04,
+  "hit5": false
  },
  {
   "id": "news1_6261163",
@@ -3461,7 +3713,9 @@
   "analyzedAt": "2026-08-17 22:32",
   "alerted": false,
   "chk1": -0.92,
-  "hit1": false
+  "hit1": false,
+  "chk5": -3.04,
+  "hit5": false
  },
  {
   "id": "dowjones_kr_LL-20260817-6401:20260817006401",
@@ -3489,7 +3743,9 @@
   "analyzedAt": "2026-08-17 22:32",
   "alerted": false,
   "chk1": -0.92,
-  "hit1": true
+  "hit1": true,
+  "chk5": -3.04,
+  "hit5": true
  },
  {
   "id": "reuter_L6N44E0Z5",
@@ -3504,7 +3760,9 @@
   "analyzedAt": "2026-08-17 22:32",
   "alerted": false,
   "chk1": -0.92,
-  "hit1": false
+  "hit1": false,
+  "chk5": -3.04,
+  "hit5": false
  },
  {
   "id": "financial_202608180522180785",
@@ -3519,7 +3777,9 @@
   "analyzedAt": "2026-08-17 22:32",
   "alerted": false,
   "chk1": -0.92,
-  "hit1": false
+  "hit1": false,
+  "chk5": -3.04,
+  "hit5": false
  },
  {
   "id": "tipranks_3716363",
@@ -3534,7 +3794,9 @@
   "analyzedAt": "2026-08-17 22:31",
   "alerted": false,
   "chk1": -0.92,
-  "hit1": true
+  "hit1": true,
+  "chk5": -3.04,
+  "hit5": true
  },
  {
   "id": "tipranks_3716440",
@@ -3562,7 +3824,9 @@
   "analyzedAt": "2026-08-17 22:31",
   "alerted": false,
   "chk1": -0.92,
-  "hit1": false
+  "hit1": false,
+  "chk5": -3.04,
+  "hit5": false
  },
  {
   "id": "reuter_L1N44E0S4",
@@ -3577,7 +3841,9 @@
   "analyzedAt": "2026-08-17 22:31",
   "alerted": false,
   "chk1": -0.92,
-  "hit1": false
+  "hit1": false,
+  "chk5": -3.04,
+  "hit5": false
  },
  {
   "id": "dowjones_kr_LL-20260817-6101:20260817006101",
@@ -3605,7 +3871,9 @@
   "analyzedAt": "2026-08-17 22:31",
   "alerted": false,
   "chk1": -0.92,
-  "hit1": false
+  "hit1": false,
+  "chk5": -3.04,
+  "hit5": false
  },
  {
   "id": "coinreaders_P00320260818253172",
@@ -3620,7 +3888,9 @@
   "analyzedAt": "2026-08-17 22:31",
   "alerted": true,
   "chk1": -0.92,
-  "hit1": false
+  "hit1": false,
+  "chk5": -3.04,
+  "hit5": false
  },
  {
   "id": "reuter_L1N44E0TP",
@@ -3648,7 +3918,9 @@
   "analyzedAt": "2026-08-17 22:31",
   "alerted": false,
   "chk1": 0.6,
-  "hit1": false
+  "hit1": false,
+  "chk5": 2.05,
+  "hit5": false
  },
  {
   "id": "wallstreetjournal_kr_LL-20260817-6431:20260817006431",
@@ -3663,7 +3935,9 @@
   "analyzedAt": "2026-08-17 22:30",
   "alerted": false,
   "chk1": 0.6,
-  "hit1": false
+  "hit1": false,
+  "chk5": 2.05,
+  "hit5": false
  },
  {
   "id": "news1_6261163",
@@ -3691,7 +3965,9 @@
   "analyzedAt": "2026-08-17 22:30",
   "alerted": false,
   "chk1": 0.6,
-  "hit1": false
+  "hit1": false,
+  "chk5": 2.05,
+  "hit5": false
  },
  {
   "id": "financial_202608180522180785",
@@ -3719,7 +3995,9 @@
   "analyzedAt": "2026-08-17 22:30",
   "alerted": false,
   "chk1": 0.6,
-  "hit1": false
+  "hit1": false,
+  "chk5": 2.05,
+  "hit5": false
  },
  {
   "id": "benzinga_61259923",
@@ -3747,7 +4025,9 @@
   "analyzedAt": "2026-08-17 22:30",
   "alerted": false,
   "chk1": 0.6,
-  "hit1": true
+  "hit1": true,
+  "chk5": 2.05,
+  "hit5": true
  },
  {
   "id": "tipranks_3716170",
@@ -3762,7 +4042,9 @@
   "analyzedAt": "2026-08-17 22:30",
   "alerted": false,
   "chk1": 0.6,
-  "hit1": false
+  "hit1": false,
+  "chk5": 2.05,
+  "hit5": false
  },
  {
   "id": "tipranks_3715968",
@@ -3816,7 +4098,9 @@
   "analyzedAt": "2026-08-17 22:29",
   "alerted": false,
   "chk1": 0.6,
-  "hit1": false
+  "hit1": false,
+  "chk5": 2.05,
+  "hit5": false
  },
  {
   "id": "tipranks_3715890",
@@ -3831,7 +4115,9 @@
   "analyzedAt": "2026-08-17 22:29",
   "alerted": false,
   "chk1": 0.6,
-  "hit1": true
+  "hit1": true,
+  "chk5": 2.05,
+  "hit5": true
  },
  {
   "id": "tipranks_3715900",
@@ -3859,7 +4145,9 @@
   "analyzedAt": "2026-08-17 22:29",
   "alerted": false,
   "chk1": 0.6,
-  "hit1": true
+  "hit1": true,
+  "chk5": 2.05,
+  "hit5": true
  },
  {
   "id": "benzinga_61254054",
@@ -3874,7 +4162,9 @@
   "analyzedAt": "2026-08-17 22:29",
   "alerted": false,
   "chk1": 0.6,
-  "hit1": true
+  "hit1": true,
+  "chk5": 2.05,
+  "hit5": true
  },
  {
   "id": "reuter_L4N44E10K",
@@ -3941,7 +4231,9 @@
   "analyzedAt": "2026-08-17 22:28",
   "alerted": false,
   "chk1": 2.22,
-  "hit1": false
+  "hit1": false,
+  "chk5": -0.07,
+  "hit5": true
  },
  {
   "id": "benzinga_61259954",
@@ -3969,7 +4261,9 @@
   "analyzedAt": "2026-08-17 22:28",
   "alerted": false,
   "chk1": 2.22,
-  "hit1": false
+  "hit1": false,
+  "chk5": -0.07,
+  "hit5": true
  },
  {
   "id": "benzinga_61259595",
@@ -3984,7 +4278,9 @@
   "analyzedAt": "2026-08-17 22:28",
   "alerted": false,
   "chk1": 2.22,
-  "hit1": true
+  "hit1": true,
+  "chk5": -0.07,
+  "hit5": false
  },
  {
   "id": "edaily_2026081803462700124",
@@ -3999,7 +4295,9 @@
   "analyzedAt": "2026-08-17 22:28",
   "alerted": false,
   "chk1": 2.22,
-  "hit1": true
+  "hit1": true,
+  "chk5": -0.07,
+  "hit5": false
  },
  {
   "id": "edaily_overseas_2026081803462700124",
@@ -4014,7 +4312,9 @@
   "analyzedAt": "2026-08-17 22:28",
   "alerted": false,
   "chk1": 2.22,
-  "hit1": true
+  "hit1": true,
+  "chk5": -0.07,
+  "hit5": false
  },
  {
   "id": "benzinga_61256549",
@@ -4042,7 +4342,9 @@
   "analyzedAt": "2026-08-17 22:28",
   "alerted": false,
   "chk1": 2.22,
-  "hit1": true
+  "hit1": true,
+  "chk5": -0.07,
+  "hit5": false
  },
  {
   "id": "tipranks_3716090",
@@ -4057,7 +4359,9 @@
   "analyzedAt": "2026-08-17 22:28",
   "alerted": true,
   "chk1": 2.22,
-  "hit1": false
+  "hit1": false,
+  "chk5": -0.07,
+  "hit5": true
  },
  {
   "id": "tipranks_3716108",
@@ -4137,7 +4441,9 @@
   "analyzedAt": "2026-08-17 22:28",
   "alerted": false,
   "chk1": 2.22,
-  "hit1": true
+  "hit1": true,
+  "chk5": -0.07,
+  "hit5": false
  },
  {
   "id": "benzinga_61253042",
