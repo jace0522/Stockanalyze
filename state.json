@@ -3047,7 +3047,7 @@
  },
  "price_levels": {
   "SOXL": {
-   "date": "2026-08-25",
+   "date": "2026-08-26",
    "level": 1
   },
   "005930": {
@@ -3122,20 +3122,20 @@
   {
    "code": "KOSPI",
    "label": "코스피",
-   "value": 6808.21,
-   "change": 0.97
+   "value": 6948.73,
+   "change": 2.06
   },
   {
    "code": "KOSDAQ",
    "label": "코스닥",
-   "value": 826.87,
-   "change": -0.03
+   "value": 833.03,
+   "change": 0.74
   },
   {
    "code": "FX_USDKRW",
    "label": "원달러",
-   "value": 1386.0,
-   "change": 0.18
+   "value": 1381.7,
+   "change": -0.31
   }
  ],
  "tg_offset": 975795672
