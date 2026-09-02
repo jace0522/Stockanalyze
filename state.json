@@ -3118,8 +3118,8 @@
   {
    "code": ".VIX",
    "label": "공포지수",
-   "value": 15.26,
-   "change": -6.61,
+   "value": 15.2,
+   "change": -6.98,
    "mood": "보통"
   },
   {
@@ -3131,7 +3131,7 @@
   {
    "code": ".DJI",
    "label": "다우",
-   "value": 53061.51,
+   "value": 53061.95,
    "change": 0.56
   },
   {
@@ -3149,8 +3149,8 @@
   {
    "code": "FX_USDKRW",
    "label": "원달러",
-   "value": 1359.8,
-   "change": -1.14
+   "value": 1360.3,
+   "change": -1.11
   }
  ],
  "tg_offset": 975795672
