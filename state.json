@@ -3118,21 +3118,21 @@
   {
    "code": ".VIX",
    "label": "공포지수",
-   "value": 14.14,
-   "change": -1.26,
+   "value": 14.53,
+   "change": 1.47,
    "mood": "잠잠함"
   },
   {
    "code": ".IXIC",
    "label": "나스닥",
-   "value": 26487.96,
-   "change": -0.36
+   "value": 26506.99,
+   "change": -0.29
   },
   {
    "code": ".DJI",
    "label": "다우",
-   "value": 53381.81,
-   "change": -0.57
+   "value": 53414.25,
+   "change": -0.51
   },
   {
    "code": "KOSPI",
@@ -3149,8 +3149,8 @@
   {
    "code": "FX_USDKRW",
    "label": "원달러",
-   "value": 1347.7,
-   "change": -0.79
+   "value": 1347.4,
+   "change": -0.82
   }
  ],
  "tg_offset": 975795672
