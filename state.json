@@ -3064,15 +3064,15 @@
  },
  "price_levels": {
   "SOXL": {
-   "date": "2026-09-04",
+   "date": "2026-09-07",
    "level": 1
   },
   "005930": {
-   "date": "2026-08-24",
+   "date": "2026-09-07",
    "level": 1
   },
   "000660": {
-   "date": "2026-09-02",
+   "date": "2026-09-07",
    "level": 1
   },
   "MSFT": {
@@ -3096,7 +3096,7 @@
    "level": 1
   },
   "NFLX": {
-   "date": "2026-08-13",
+   "date": "2026-09-07",
    "level": 1
   },
   "AVGO": {
@@ -3104,7 +3104,7 @@
    "level": 1
   },
   "TSLA": {
-   "date": "2026-09-04",
+   "date": "2026-09-07",
    "level": 1
   }
  },
@@ -3120,9 +3120,9 @@
   {
    "code": ".VIX",
    "label": "공포지수",
-   "value": 14.53,
-   "change": 1.47,
-   "mood": "잠잠함"
+   "value": 15.3,
+   "change": 5.3,
+   "mood": "보통"
   },
   {
    "code": ".IXIC",
@@ -3139,20 +3139,20 @@
   {
    "code": "KOSPI",
    "label": "코스피",
-   "value": 6687.21,
-   "change": 1.64
+   "value": 6995.39,
+   "change": 4.61
   },
   {
    "code": "KOSDAQ",
    "label": "코스닥",
-   "value": 813.5,
-   "change": 2.95
+   "value": 822.19,
+   "change": 1.07
   },
   {
    "code": "FX_USDKRW",
    "label": "원달러",
-   "value": 1347.4,
-   "change": -0.82
+   "value": 1346.0,
+   "change": -0.26
   }
  ],
  "tg_offset": 975795672
