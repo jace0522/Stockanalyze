@@ -3128,8 +3128,8 @@
   {
    "code": ".VIX",
    "label": "공포지수",
-   "value": 15.57,
-   "change": 1.76,
+   "value": 15.72,
+   "change": 2.75,
    "mood": "보통"
   },
   {
@@ -3159,8 +3159,8 @@
   {
    "code": "FX_USDKRW",
    "label": "원달러",
-   "value": 1341.8,
-   "change": -0.39
+   "value": 1341.5,
+   "change": -0.41
   }
  ],
  "tg_offset": 975795672
