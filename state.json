@@ -3128,21 +3128,21 @@
   {
    "code": ".VIX",
    "label": "공포지수",
-   "value": 15.26,
-   "change": -0.26,
+   "value": 15.57,
+   "change": 1.76,
    "mood": "보통"
   },
   {
    "code": ".IXIC",
    "label": "나스닥",
-   "value": 26499.12,
-   "change": -0.03
+   "value": 26421.41,
+   "change": -0.32
   },
   {
    "code": ".DJI",
    "label": "다우",
-   "value": 52911.93,
-   "change": -0.94
+   "value": 52786.07,
+   "change": -1.18
   },
   {
    "code": "KOSPI",
