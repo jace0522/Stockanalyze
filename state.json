@@ -3137,11 +3137,11 @@
    "level": 2
   },
   "005930": {
-   "date": "2026-10-13",
+   "date": "2026-10-14",
    "level": 1
   },
   "000660": {
-   "date": "2026-10-13",
+   "date": "2026-10-14",
    "level": 1
   },
   "MSFT": {
@@ -3211,20 +3211,20 @@
   {
    "code": "KOSPI",
    "label": "코스피",
-   "value": 6008.81,
-   "change": -0.44
+   "value": 5674.97,
+   "change": -5.56
   },
   {
    "code": "KOSDAQ",
    "label": "코스닥",
-   "value": 823.88,
-   "change": -1.57
+   "value": 784.08,
+   "change": -4.83
   },
   {
    "code": "FX_USDKRW",
    "label": "원달러",
-   "value": 1342.5,
-   "change": -0.04
+   "value": 1340.4,
+   "change": -0.19
   }
  ],
  "tg_offset": 975795672
