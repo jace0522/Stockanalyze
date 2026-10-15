@@ -3135,16 +3135,16 @@
  },
  "price_levels": {
   "SOXL": {
-   "date": "2026-10-14",
-   "level": 2
+   "date": "2026-10-15",
+   "level": 1
   },
   "005930": {
-   "date": "2026-10-14",
-   "level": 1
+   "date": "2026-10-15",
+   "level": 2
   },
   "000660": {
-   "date": "2026-10-14",
-   "level": 1
+   "date": "2026-10-15",
+   "level": 2
   },
   "MSFT": {
    "date": "2026-09-23",
@@ -3195,39 +3195,39 @@
   {
    "code": ".VIX",
    "label": "공포지수",
-   "value": 16.87,
-   "change": 10.48,
+   "value": 16.74,
+   "change": -0.77,
    "mood": "보통"
   },
   {
    "code": ".IXIC",
    "label": "나스닥",
-   "value": 26692.87,
-   "change": -1.88
+   "value": 26656.75,
+   "change": -0.14
   },
   {
    "code": ".DJI",
    "label": "다우",
-   "value": 51621.48,
-   "change": -0.09
+   "value": 52123.6,
+   "change": 0.97
   },
   {
    "code": "KOSPI",
    "label": "코스피",
-   "value": 5616.71,
-   "change": -6.53
+   "value": 5554.22,
+   "change": -7.57
   },
   {
    "code": "KOSDAQ",
    "label": "코스닥",
-   "value": 767.31,
-   "change": -6.87
+   "value": 760.82,
+   "change": -7.65
   },
   {
    "code": "FX_USDKRW",
    "label": "원달러",
-   "value": 1347.5,
-   "change": 0.34
+   "value": 1343.0,
+   "change": 0.0
   }
  ],
  "tg_offset": 975795672
