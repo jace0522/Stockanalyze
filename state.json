@@ -3201,9 +3201,9 @@
   {
    "code": ".VIX",
    "label": "공포지수",
-   "value": 20.42,
-   "change": 24.06,
-   "mood": "불안"
+   "value": 19.99,
+   "change": 21.45,
+   "mood": "보통"
   },
   {
    "code": ".IXIC",
@@ -3214,7 +3214,7 @@
   {
    "code": ".DJI",
    "label": "다우",
-   "value": 52001.52,
+   "value": 52002.41,
    "change": -0.34
   },
   {
@@ -3232,8 +3232,8 @@
   {
    "code": "FX_USDKRW",
    "label": "원달러",
-   "value": 1336.0,
-   "change": -0.48
+   "value": 1336.8,
+   "change": -0.42
   }
  ],
  "tg_offset": 975795672
