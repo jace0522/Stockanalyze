@@ -3225,20 +3225,20 @@
   {
    "code": "KOSPI",
    "label": "코스피",
-   "value": 5735.66,
-   "change": 3.29
+   "value": 5729.75,
+   "change": -0.1
   },
   {
    "code": "KOSDAQ",
    "label": "코스닥",
-   "value": 792.76,
-   "change": 1.38
+   "value": 788.75,
+   "change": -0.51
   },
   {
    "code": "FX_USDKRW",
    "label": "원달러",
-   "value": 1327.2,
-   "change": 0.02
+   "value": 1327.6,
+   "change": 0.01
   }
  ],
  "tg_offset": 975795672
