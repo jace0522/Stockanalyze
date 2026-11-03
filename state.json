@@ -3125,7 +3125,7 @@
   "QQQ": "QQQ",
   "SPY": "SPY"
  },
- "last_daily": 1793410113.1851869,
+ "last_daily": 1793676185.7693007,
  "naver": {
   "AAPL": "AAPL.O",
   "MSFT": "MSFT.O",
@@ -3188,7 +3188,7 @@
   }
  },
  "earnings": {
-  "_fetched": "2026-10-30",
+  "_fetched": "2026-11-02",
   "AAPL": "2026-11-02"
  },
  "earnings_alerted": {
@@ -3207,39 +3207,39 @@
   {
    "code": ".VIX",
    "label": "공포지수",
-   "value": 19.42,
-   "change": 12.91,
-   "mood": "보통"
+   "value": 21.15,
+   "change": 8.91,
+   "mood": "불안"
   },
   {
    "code": ".IXIC",
    "label": "나스닥",
-   "value": 25437.0,
-   "change": -2.86
+   "value": 25164.36,
+   "change": -1.07
   },
   {
    "code": ".DJI",
    "label": "다우",
-   "value": 51770.31,
-   "change": -1.09
+   "value": 51983.98,
+   "change": 0.41
   },
   {
    "code": "KOSPI",
    "label": "코스피",
-   "value": 5730.74,
-   "change": -3.48
+   "value": 5662.44,
+   "change": -3.36
   },
   {
    "code": "KOSDAQ",
    "label": "코스닥",
-   "value": 724.38,
-   "change": -3.83
+   "value": 711.36,
+   "change": -3.13
   },
   {
    "code": "FX_USDKRW",
    "label": "원달러",
-   "value": 1335.8,
-   "change": -0.35
+   "value": 1339.3,
+   "change": -0.5
   }
  ],
  "tg_offset": 975795672
